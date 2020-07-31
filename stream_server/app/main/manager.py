@@ -1,95 +1,144 @@
 import time
+from threading import Thread, Lock
 from .client import Producer, Consumer
 
 
-class ClientManager:
+class ClientManager(Thread):
+    lock = Lock()
+
     def __init__(self, socket):
         # One-to-Many Producer-to-Consumer Relationship
+        Thread.__init__(self)
         self.socket = socket
+        self.clients = {}
         self.producers = {}
         self.consumers = {}
 
-    def authenticate_user(self, session_id, environ):
-        # Expected { user_id, client_type, client_key }
-        # Connect to Dynamo DB, check the user_id and client_key is valid - Client Key's Should be generated at API
-        user_id = environ['user_id']
-        client_type = environ['client_type']
-        client_key = environ['client_key']
+    def run(self):
+        while True:
+            self.check_connections()
+            self.clean_connections()
+            time.sleep(60)
 
-        print('Authenticating User: \n\
-                User ID : ' + str(user_id) + '\n\
-                Client Type : ' + str(client_type) + '\n\
-                Client Key : ' + str(client_key) + '\n')
+    def authenticate_user(self, session_id, environ):
+        # Connect to Dynamo DB, check the user_id and client_key is valid - Client Key's Should be generated at API
+        user_id = str(environ['user_id'])
+        client_type = str(environ['client_type'])
+        client_key = str(environ['client_key'])
+
+        print('%%%%%%%%%%%\t Authenticating User: \n\
+                \t\tUser ID : ' + user_id + '\n\
+                \t\tClient Type : ' + client_type + '\n\
+                \t\tClient Key : ' + client_key + '\n')
 
         client = None
+        
+        self.check_connections()
+
         if client_type == 'producer':
             client = self.add_producer(session_id, user_id)
+
         elif client_type == 'consumer':
             client = self.add_consumer(session_id, user_id)
+
         else:
             print('User authentication failed...')
-        self.check_connections()
+
+        if client is not None:
+            self.clients[client.id] = client
+            self.check_connections()
+
         return client
 
-    def remove_client(self, id, user_id):
-        if self.producers[user_id].id == id:
-            del self.producers[user_id]
-        else:
-            for index in range(len(self.consumers[user_id])):
-                if self.consumers[user_id][index].id == id:
-                    del self.consumers[user_id][index]
-        self.clean_connections()
-
     def add_producer(self, session_id, user_id):
+        self.lock.acquire()
+
+        print("%%%%%%%%%%%\t Add Producer ", session_id, user_id)
+
         if user_id in self.producers:
             print('Producer being overrode!')
             self.producers[user_id].deactivate()
-            self.remove_client(self.producers[user_id].id, user_id)
+            self.remove_client(self.producers[user_id].id)
 
         producer = Producer(session_id, user_id, self.socket)
         self.producers[user_id] = producer
+        self.lock.release()
         return producer
 
     def add_consumer(self, session_id, user_id):
+        self.lock.acquire()
+
+        print("%%%%%%%%%%%\t Add Consumer ", session_id, user_id)
         if user_id not in self.consumers:
             self.consumers[user_id] = []
 
         consumer = Consumer(session_id, user_id, self.socket)
 
-        tries = 0
-        while user_id not in self.producers:
-            time.sleep(5)
-            tries += 1
-            if tries > 100:
-                break
-
         if user_id in self.producers:
             consumer.set_producer(self.producers[user_id])
         else:
-            print('Error: Producer not present!')
-            return None
+            print('Warning: Producer not present!')
 
         self.consumers[user_id].append(consumer)
+
+        self.lock.release()
+
         return consumer
 
-    def put_frame(self, user_id, frame):
-        if user_id in self.producers:
-            self.producers[user_id].produce(frame)
-            self.retrieve_frames(user_id)
+    def remove_client(self, client_id):
+        self.lock.acquire()
 
-    def retrieve_frames(self, user_id):
-        for index in range(len(self.consumers[user_id])):
-            self.consumers[user_id][index].consume()
+        print("%%%%%%%%%%%\t Removing Client ", client_id)
+        if client_id in self.clients:
+            user_id = self.clients[client_id].user_id
+            if user_id in self.consumers:
+                for index in range(len(self.consumers[user_id])):
+                    if self.consumers[user_id][index].id == id:
+                        self.consumers[user_id][index].clear_ids()
+                        del self.consumers[user_id][index]
+            if user_id in self.producers and self.producers[user_id].id == client_id:
+                del self.producers[user_id]
+            del self.clients[client_id]
+
+        self.lock.release()
+
+        self.clean_connections()
+
+    def set_cameras(self, client_id, camera_ids):
+        self.lock.acquire()
+
+        print("%%%%%%%%%%%\t Setting Cameras ", client_id, camera_ids)
+
+        if client_id in self.clients:
+            for camera_id in camera_ids:
+                self.clients[client_id].add_id(camera_id)
+
+        self.lock.release()
+
+    async def put_frame(self, user_id, camera_id, frame):
+        print("%%%%%%%%%%%\t Putting Frame ", camera_id, frame)
+        if user_id in self.producers:
+            self.producers[user_id].produce(camera_id, frame)
 
     def check_connections(self):
+        self.lock.acquire()
+        print("%%%%%%%%%%%\t Checking Connections ")
         for user_id, producer in self.producers.items():
             if user_id in self.consumers and len(self.consumers[user_id]) > 0:
+                for consumer in self.consumers[user_id]:
+                    if consumer.producer is None:
+                        consumer.set_producer(self.producers[user_id])
                 producer.activate()
+        self.lock.release()
 
     def clean_connections(self):
+        self.lock.acquire()
+        print("%%%%%%%%%%%\t Cleaning Connections ")
         for user_id, producer in self.producers.items():
-            if len(self.consumers[user_id]) == 0:
+            if user_id in self.consumers and len(self.consumers[user_id]) == 0:
+                producer.clean()
                 producer.deactivate()
+        self.lock.release()
 
     def __str__(self):
         to_string = ''

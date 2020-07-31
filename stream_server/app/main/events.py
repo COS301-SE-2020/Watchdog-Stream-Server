@@ -1,3 +1,4 @@
+import asyncio
 from . import client_manager, socket_server
 # HCP-Client:
 #   Will always try connecting
@@ -14,55 +15,49 @@ from . import client_manager, socket_server
 
 
 # connect : Client Connects
-#   Authenticate client
-#       Check if HCP-client or Mobile-client
-#           Assign to correct category in ClientManager
 @socket_server.event
 def connect(sid, environ):
-    print('connecting on ', sid)
+    print('connecting ... ', sid)
 
 
 # disconnect : Client Disconnects
-#   Disconnect client from ClientManager
-#       If this is a Mobile-client, and the respective HCP-client now has 0 Mobile-clients, set it as inactive
 @socket_server.event
 def disconnect(sid):
-    print('disconnect off ', sid)
+    print('disconnecting ... ', sid)
     session = socket_server.get_session(sid)
-    client_manager.remove_client(session['client_id'], session['user_id'])
+    client_manager.remove_client(session['client_id'])
 
 
 # connect : Client Connects
-#   Authenticate client
-#       Check if HCP-client or Mobile-client
-#           Assign to correct category in ClientManager
+# data : { user_id : string, client_type : string, client_key : string }
 @socket_server.on('authorize')
 def handle_auth(sid, data):
-    print('authorize ', sid)
+    print('authorizing ... ', data)
     client = client_manager.authenticate_user(sid, data)
-    if client is None:
+    if client is not None:
+        socket_server.save_session(sid, {'client_id': client.id, 'user_id': client.user_id})
+    else:
         raise ConnectionRefusedError('authentication failed')
-    # Store client id in session, so that we know which client to manage when called
-    socket_server.save_session(sid, {'client_id': client.id, 'user_id': client.user_id})
 
 
-# broadcast : HCP-client sending encoded frame.jpg (continuous)
-#   Add the frame to this HCP-clients buffer
-@socket_server.on('broadcast')
+# produce-frame : HCP-client sending encoded frame.jpg (continuous)
+# data : { camera_id : string, frame : base64.jpg }
+@socket_server.on('produce-frame')
 def handle_broadcast(sid, data):
-    print('broadcasting on ', sid)
     session = socket_server.get_session(sid)
-    client_manager.put_frame(session['user_id'], data['frame'])
+    print('producing frame ... ', data)
+    asyncio.get_event_loop().run_until_complete(
+        client_manager.put_frame(session['user_id'], data['camera_id'], data['frame'])
+    )
     return 'OK'
 
 
-# view : Mobile-client wanting to start retrieving encoded frame.jpg's from its respective hcp (once-off)
-#   Sets it respective HCP-Client as active (if it is not already)
-#       Starts the sending of frames to the Mobile-client
-# @socket_server.on('view')
-# def handle_view(sid, data):
-#     print(data)
-#     session = socket_server.get_session(sid)
-#     if client_manager.check_producer(session['id'], data['user_id']):
-#         return 'OK'
-#     return 'EMPTY'
+# consume-view : Sets the respective cameras a consumer wants to stream
+# data : { camera_list : [] }
+@socket_server.on('consume-view')
+def handle_view(sid, data):
+    session = socket_server.get_session(sid)
+    print('setting camera views ... ', data)
+    print('\tcamera-list : ', data['camera_list'])
+    client_manager.set_cameras(session['client_id'], data['camera_list'])
+    return 'OK'
