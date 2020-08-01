@@ -17,7 +17,7 @@ if user_type == 'producer':
         cams = client.camera_list
         for index in range(len(cams)):
             client.produce(cams[index], str(random.getrandbits(128)))
-        time.sleep(1 / 60)
+        time.sleep(1 / 15)
 
 elif user_type == 'consumer':
     cams = []

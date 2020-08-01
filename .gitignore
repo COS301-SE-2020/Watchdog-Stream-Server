@@ -4,14 +4,12 @@
 # IDEs
 .vs
 .vscode
-# Python-Module
-home_controller_system.egg-info
 # Python-Cache
 .pytest_cache
 stream_server/__pycache__
 stream_server/app/__pycache__
 stream_server/app/main/__pycache__
-stream_server/user/__pycache__
+stream_user/__pycache__
 # Other
 poetry.lock
 *.bat

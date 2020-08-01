@@ -86,3 +86,4 @@ class Consumer(User):
 
 def log(message):
     print(message)
+    print('')

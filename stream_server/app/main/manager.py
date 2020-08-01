@@ -26,13 +26,13 @@ class ClientManager(Thread):
         client_type = str(environ['client_type'])
         client_key = str(environ['client_key'])
 
-        print('%%%%%%%%%%%\t Authenticating User: \n\
+        print('Authenticating User: \n\
                 \t\tUser ID : ' + user_id + '\n\
                 \t\tClient Type : ' + client_type + '\n\
                 \t\tClient Key : ' + client_key + '\n')
 
         client = None
-        
+
         self.check_connections()
 
         if client_type == 'producer':
@@ -53,8 +53,6 @@ class ClientManager(Thread):
     def add_producer(self, session_id, user_id):
         self.lock.acquire()
 
-        print("%%%%%%%%%%%\t Add Producer ", session_id, user_id)
-
         if user_id in self.producers:
             print('Producer being overrode!')
             self.producers[user_id].deactivate()
@@ -68,7 +66,6 @@ class ClientManager(Thread):
     def add_consumer(self, session_id, user_id):
         self.lock.acquire()
 
-        print("%%%%%%%%%%%\t Add Consumer ", session_id, user_id)
         if user_id not in self.consumers:
             self.consumers[user_id] = []
 
@@ -88,7 +85,6 @@ class ClientManager(Thread):
     def remove_client(self, client_id):
         self.lock.acquire()
 
-        print("%%%%%%%%%%%\t Removing Client ", client_id)
         if client_id in self.clients:
             user_id = self.clients[client_id].user_id
             if user_id in self.consumers:
@@ -107,8 +103,6 @@ class ClientManager(Thread):
     def set_cameras(self, client_id, camera_ids):
         self.lock.acquire()
 
-        print("%%%%%%%%%%%\t Setting Cameras ", client_id, camera_ids)
-
         if client_id in self.clients:
             for camera_id in camera_ids:
                 self.clients[client_id].add_id(camera_id)
@@ -116,13 +110,11 @@ class ClientManager(Thread):
         self.lock.release()
 
     async def put_frame(self, user_id, camera_id, frame):
-        print("%%%%%%%%%%%\t Putting Frame ", camera_id, frame)
         if user_id in self.producers:
             self.producers[user_id].produce(camera_id, frame)
 
     def check_connections(self):
         self.lock.acquire()
-        print("%%%%%%%%%%%\t Checking Connections ")
         for user_id, producer in self.producers.items():
             if user_id in self.consumers and len(self.consumers[user_id]) > 0:
                 for consumer in self.consumers[user_id]:
@@ -133,7 +125,6 @@ class ClientManager(Thread):
 
     def clean_connections(self):
         self.lock.acquire()
-        print("%%%%%%%%%%%\t Cleaning Connections ")
         for user_id, producer in self.producers.items():
             if user_id in self.consumers and len(self.consumers[user_id]) == 0:
                 producer.clean()

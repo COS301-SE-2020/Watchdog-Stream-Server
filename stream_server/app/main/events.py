@@ -1,17 +1,5 @@
 import asyncio
 from . import client_manager, socket_server
-# HCP-Client:
-#   Will always try connecting
-#   Will only broadcast if there are connected Mobile-clients for the same user-id
-#       Receives Start/Stop signals to indicate if it should broadcast (sent from ClientManager)
-#   When broacasting, will continuously send bytestreams of jpeg frames to fill its frame_buffer
-
-# Mobile-Client:
-#   Will only connect when wanting to view a livestream
-#   Every client must go through the API Gateway, which will trigger the EC2 instance if it is inactive
-#   Will draw the most up to date frame to its livestream view when sent an image
-#       Will only be sent to client if its respective HCP-Client is present
-#       If HCP-Client is inactive, it is set to active
 
 
 # connect : Client Connects
@@ -46,9 +34,11 @@ def handle_auth(sid, data):
 def handle_broadcast(sid, data):
     session = socket_server.get_session(sid)
     print('producing frame ... ', data)
-    asyncio.get_event_loop().run_until_complete(
-        client_manager.put_frame(session['user_id'], data['camera_id'], data['frame'])
-    )
+    asyncio.get_event_loop().run_until_complete(client_manager.put_frame(
+        session['user_id'],
+        data['camera_id'],
+        data['frame']
+    ))
     return 'OK'
 
 
