@@ -5,7 +5,7 @@ description = ""
 authors = ["Jordan Manas <u17080534@tuks.co.za>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 poetrify = "^0.4.1"
 python-socketio = "^4.6.0"
 eventlet = "^0.25.2"
