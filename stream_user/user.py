@@ -10,7 +10,7 @@ class User:
         self.id = self.generate_id(self)
         self.user_id = user_id
         self.socket = socketio.Client()
-        self.socket.connect('http://127.0.0.1:8008')
+        self.socket.connect('https://13.245.35.130:80')
 
         # Data : { user_id : string, camera_list : string }
         @self.socket.on('activate-broadcast')
@@ -39,14 +39,11 @@ class User:
 
 # Front-End Producer Client
 class Producer(User):
-    producers = {}
-
     def __init__(self, user_id):
         super(Producer, self).__init__(user_id)
         self.active = False
         self.camera_list = []
         self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'producer', 'client_key': CLIENT_KEY})
-        Producer.producers[self.id] = self
 
     # Start HCP Client Producer
     def activate(self, camera_list):
@@ -69,12 +66,9 @@ class Producer(User):
 
 # Front-End Consumer Client
 class Consumer(User):
-    consumers = {}
-
     def __init__(self, user_id):
         super(Consumer, self).__init__(user_id)
         self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'consumer', 'client_key': CLIENT_KEY})
-        Consumer.consumers[self.id] = self
 
     def set_cameras(self, camera_list):
         self.socket.emit('consume-view', {'camera_list': camera_list})

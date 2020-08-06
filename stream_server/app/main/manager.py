@@ -84,7 +84,6 @@ class ClientManager(Thread):
 
     def remove_client(self, client_id):
         self.lock.acquire()
-
         if client_id in self.clients:
             user_id = self.clients[client_id].user_id
             if user_id in self.consumers:
@@ -95,9 +94,7 @@ class ClientManager(Thread):
             if user_id in self.producers and self.producers[user_id].id == client_id:
                 del self.producers[user_id]
             del self.clients[client_id]
-
         self.lock.release()
-
         self.clean_connections()
 
     def set_cameras(self, client_id, camera_ids):

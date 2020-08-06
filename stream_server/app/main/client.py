@@ -25,7 +25,6 @@ class Producer(ClientHandler):
     def activate(self):
         if len(self.ids) > 0:
             self.active = True
-            print('$$$$$$$ ACTIVATING CLIENT ', self.id, self.user_id, self.session_id)
             self.socket.emit('activate-broadcast', {
                 'user_id': self.user_id,
                 'camera_list': self.ids
