@@ -10,7 +10,7 @@ class User:
         self.id = self.generate_id(self)
         self.user_id = user_id
         self.socket = socketio.Client()
-        self.socket.connect('https://ec2-13-245-35-130.af-south-1.compute.amazonaws.com:8008')
+        self.socket.connect('https://ec2-13-245-35-130.af-south-1.compute.amazonaws.com:80')
 
         # Data : { user_id : string, camera_list : string }
         @self.socket.on('activate-broadcast')

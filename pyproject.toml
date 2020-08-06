@@ -8,6 +8,7 @@ authors = ["Jordan Manas <u17080534@tuks.co.za>"]
 python = "^3.6"
 python-socketio = "^4.6.0"
 eventlet = "^0.25.2"
+requests = "^2.24.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

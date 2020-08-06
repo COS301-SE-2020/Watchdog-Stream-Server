@@ -11,6 +11,8 @@ stream_server/app/__pycache__
 stream_server/app/main/__pycache__
 stream_user/__pycache__
 stream_user/browser/node_modules
-# Other
+# Poetry
 poetry.lock
+stream_server.egg-info
+# Other
 *.bat
