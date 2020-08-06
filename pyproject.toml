@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "home-controller-system"
+name = "stream-server"
 version = "0.1.0"
 description = ""
-authors = ["Jonathen Sundy <jonathensundy@gmail.com>"]
+authors = ["Jordan Manas <u17080534@tuks.co.za>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
