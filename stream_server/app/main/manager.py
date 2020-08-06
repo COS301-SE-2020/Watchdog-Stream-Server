@@ -106,7 +106,7 @@ class ClientManager(Thread):
 
         self.lock.release()
 
-    async def put_frame(self, user_id, camera_id, frame):
+    def put_frame(self, user_id, camera_id, frame):
         if user_id in self.producers:
             self.producers[user_id].produce(camera_id, frame)
 
