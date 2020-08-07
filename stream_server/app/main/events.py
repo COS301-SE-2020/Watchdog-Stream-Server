@@ -1,5 +1,9 @@
-import asyncio
-from . import client_manager, socket_server
+import socketio
+from . import manager
+
+
+socket_server = socketio.Server(async_mode='eventlet')
+client_manager = manager.ClientManager(socket_server)
 
 
 # connect : Client Connects
@@ -34,11 +38,11 @@ def handle_auth(sid, data):
 def handle_broadcast(sid, data):
     session = socket_server.get_session(sid)
     print('producing frame ... ', data)
-    asyncio.get_event_loop().run_until_complete(client_manager.put_frame(
+    client_manager.put_frame(
         session['user_id'],
         data['camera_id'],
         data['frame']
-    ))
+    )
     return 'OK'
 
 

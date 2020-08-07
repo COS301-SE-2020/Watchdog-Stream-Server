@@ -1,8 +1,6 @@
-import socketio
-from . import manager
+# import socketio
+# from . import manager
 
-socket_server = socketio.Server(async_mode='eventlet')
+# socket_server = socketio.Server(async_mode='eventlet')
 
-client_manager = manager.ClientManager(socket_server)
-
-client_manager.start()
+# client_manager = manager.ClientManager(socket_server)
