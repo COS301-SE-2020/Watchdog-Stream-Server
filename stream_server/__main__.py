@@ -5,7 +5,7 @@ app = create_app(debug=True)
 
 
 def main():
-    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 8080)), app)
+    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 8008)), app)
 
 
 if __name__ == '__main__':
