@@ -1,0 +1,44 @@
+---
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Can contain only ASCII characters.
+Resources:
+  AWSTemplateFormatVersion: "2010-09-09"
+  Description: >
+    This Cloudformation stack defines the resources needed to deploy
+    the server socket.io for live streaming.
+
+    Specifically, an EC2 instance is created with a security group
+    to allow for tcp connection. 
+
+    Once this is deployed, the Stream Server is cloned into the instance
+    and the libraries are installed, defined in the pyproject.toml
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+        GroupDescription: Allow http to client host
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  ServerSocket:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-0eac257d
+      UserData:
+        'Fn::Base64':
+          !Sub |
+            #!/bin/bash
+            yum -y update
+      SecurityGroups:
+        - !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: My EC2 Instance
+        - Key: Type
+          Value: Worker Instance
+...
