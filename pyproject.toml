@@ -6,7 +6,7 @@ authors = ["Jordan Manas <u17080534@tuks.co.za>"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
-python-socketio = "^4.6.0"
+python-socketio = {extras = ["client"], version = "^4.6.0"}
 eventlet = "^0.25.2"
 requests = "^2.24.0"
 
