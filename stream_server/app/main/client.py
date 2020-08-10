@@ -17,21 +17,23 @@ class ClientHandler:
 
 
 class Producer(ClientHandler):
-    def __init__(self, session_id, user_id, socket, producer_id):
+    def __init__(self, socket, session_id, user_id, producer_id, available_camera_ids=[]):
         super(Producer, self).__init__(session_id, user_id, socket)
-        self.ids = []
-        self.consumers = {}
-        self.buffer = None
-        self.active = False
         self.producer_id = producer_id
+        self.available_camera_ids = available_camera_ids
+        self.requested_camera_ids = []
+        self.consumers = {}
+        self.active = False
+        self.buffer = None
 
     # Send signal to producer to activate its broadcast
     def activate(self):
-        if len(self.consumers) > 0 and len(self.ids) > 0:
+        self.requested_camera_ids = [cam_id for cam_id in self.requested_camera_ids if cam_id in self.available_camera_ids]
+        if len(self.consumers) > 0 and len(self.requested_camera_ids) > 0:
             self.active = True
             self.socket.emit('activate-broadcast', {
                 'user_id': self.user_id,
-                'camera_list': self.ids
+                'camera_list': self.requested_camera_ids
             }, room=self.session_id)
         elif len(self.consumers) == 0:
             self.deactivate()
@@ -54,8 +56,8 @@ class Producer(ClientHandler):
 
     # Add Camera ID to Producer
     def add_id(self, id):
-        if id not in self.ids:
-            self.ids.append(id)
+        if id not in self.requested_camera_ids:
+            self.requested_camera_ids.append(id)
             self.activate()
 
     # Accept broacasted frame
@@ -66,28 +68,31 @@ class Producer(ClientHandler):
                 consumer.consume(camera_id)
 
     def clean_ids(self):
-        self.ids = []
+        self.requested_camera_ids = []
         for client_id, consumer in self.consumers.items():
             if consumer is None:
                 del self.consumers[client_id]
             else:
-                for id in consumer.ids:
-                    if id not in self.ids:
-                        self.ids.append(id)
-        if len(self.ids) > 0:
+                for id in consumer.requested_camera_ids:
+                    if id not in self.requested_camera_ids:
+                        self.requested_camera_ids.append(id)
+        if len(self.requested_camera_ids) > 0:
             self.activate()
         else:
             self.deactivate()
+
+    def get_available_ids(self):
+        return self.available_camera_ids
 
     def get_type(self):
         return 'producer'
 
 class Consumer(ClientHandler):
-    def __init__(self, session_id, user_id, socket):
+    def __init__(self, socket, session_id, user_id):
         super(Consumer, self).__init__(session_id, user_id, socket)
         self.producer = None
         self.producer_id = None
-        self.ids = []
+        self.requested_camera_ids = []
 
     # Assign producer to consumer; Occurs when Receiving Camera List
     def set_producer(self, producer):
@@ -109,18 +114,18 @@ class Consumer(ClientHandler):
     def set_ids(self, camera_ids):
         self.clear_ids()
         for camera_id in camera_ids:
-            self.ids.append(camera_id)
+            self.requested_camera_ids.append(camera_id)
             if self.producer is not None:
                 self.producer.add_id(camera_id)
 
     def clear_ids(self):
-        self.ids = []
+        self.requested_camera_ids = []
         if self.producer is not None:
             self.producer.clean_ids()
 
     # Consumer from the Producers Buffer
     def consume(self, camera_id):
-        if self.producer is not None and camera_id in self.ids:
+        if self.producer is not None and camera_id in self.requested_camera_ids:
             frame = self.producer.buffer
             # emit frame bytecode to this client
             self.socket.emit('consume-frame', {

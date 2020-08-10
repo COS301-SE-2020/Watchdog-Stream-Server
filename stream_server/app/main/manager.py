@@ -12,6 +12,7 @@ class ClientManager():
 
     def authenticate_user(self, session_id, environ):
         client = None
+
         if 'user_id' not in environ or 'client_type' not in environ or 'client_key' not in environ:
             print('User authentication failed...')
             return client
@@ -30,7 +31,11 @@ class ClientManager():
 
         if client_type == 'producer':
             if 'producer_id' in environ:
-                client = self.add_producer(session_id, user_id, str(environ['producer_id']))
+                producer_id = str(environ['producer_id'])
+                available_cameras = []
+                if 'available_cameras' in environ:
+                    available_cameras = environ['available_cameras']
+                client = self.add_producer(session_id, user_id, producer_id, available_cameras)
         elif client_type == 'consumer':
             client = self.add_consumer(session_id, user_id)
 
@@ -39,21 +44,22 @@ class ClientManager():
 
         return client
 
-    def add_producer(self, session_id, user_id, producer_id):
+    def add_producer(self, session_id, user_id, producer_id, available_cameras):
         if user_id not in self.producers:
             self.producers[user_id] = {}
 
-        producer = Producer(session_id, user_id, self.socket, producer_id)
+        producer = Producer(self.socket, session_id, user_id, producer_id, available_cameras)
 
         if producer.id in self.producers[user_id]:
             print('Warning: Overwriting producer with matching ID...')
 
-        self.producers[user_id][producer.id] = producer
-
-        if user_id in self.consumers:
-            for client_id, consumer in self.consumers[user_id].items():
-                if consumer.producer_id == producer_id and consumer.check_producer(producer_id) is False:
-                    consumer.set_producer(producer)
+        if producer is not None:
+            self.producers[user_id][producer.id] = producer
+            if user_id in self.consumers:
+                for client_id, consumer in self.consumers[user_id].items():
+                    if consumer.producer_id == producer_id and consumer.check_producer(producer_id) is False:
+                        consumer.set_producer(producer)
+                        self.send_available_cameras(consumer.session_id, consumer.user_id)
 
         return producer
 
@@ -61,8 +67,11 @@ class ClientManager():
         if user_id not in self.consumers:
             self.consumers[user_id] = {}
 
-        consumer = Consumer(session_id, user_id, self.socket)
-        self.consumers[user_id][consumer.id] = consumer
+        consumer = Consumer(self.socket, session_id, user_id)
+
+        if consumer is not None:
+            self.consumers[user_id][consumer.id] = consumer
+            self.send_available_cameras(session_id, user_id)
 
         return consumer
 
@@ -86,6 +95,16 @@ class ClientManager():
                 del self.clients[client_id]
                 print('Client disconnected...')
                 break
+
+    def send_available_cameras(self, session_id, user_id):
+        available_producers = {}
+        if user_id in self.producers:
+            for client_id, producer in self.producers[user_id].items():
+                available_producers[producer.producer_id] = producer.get_available_ids()
+
+        self.socket.emit('available-views', {
+            'producers': available_producers
+        }, room=session_id)
 
     def set_cameras(self, client_id, producer_id, camera_ids):
         if client_id in self.clients:

@@ -31,6 +31,10 @@ class User:
             image = data['frame']
             self.consume(image)
 
+        @self.socket.on('available-views')
+        def available_views(data):
+            print('available views ... ', data, self.id)
+
     @staticmethod
     def generate_id(user):
         id = 'u' + str(random.getrandbits(128))
@@ -39,11 +43,11 @@ class User:
 
 # Front-End Producer Client
 class Producer(User):
-    def __init__(self, user_id, producer_id):
+    def __init__(self, user_id, producer_id, available_cameras):
         super(Producer, self).__init__(user_id)
         self.active = False
         self.camera_list = []
-        self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'producer', 'producer_id': producer_id, 'client_key': CLIENT_KEY})
+        self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'producer', 'producer_id': producer_id, 'available_cameras': available_cameras, 'client_key': CLIENT_KEY})
 
     # Start HCP Client Producer
     def activate(self, camera_list):
@@ -69,10 +73,16 @@ class Consumer(User):
     def __init__(self, user_id):
         super(Consumer, self).__init__(user_id)
         self.buffer = None
+        self.producer_id = None
+        self.camera_list = []
         self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'consumer', 'client_key': CLIENT_KEY})
 
-    def set_cameras(self, producer_id, camera_list):
-        self.socket.emit('consume-view', {'producer_id': producer_id, 'camera_list': camera_list})
+    def set_cameras(self, producer_id=None, camera_list=[]):
+        if producer_id is not None:
+            self.producer_id = producer_id
+        self.camera_list.extend(x for x in camera_list if x not in self.camera_list)
+        if self.producer_id is not None:
+            self.socket.emit('consume-view', {'producer_id': self.producer_id, 'camera_list': self.camera_list})
 
     # Mobile Client Consumer Draws frame data to screen
     def consume(self, data):
