@@ -2,7 +2,7 @@ import asyncio
 import socketio
 from . import manager
 
-socket_server = socketio.Server(async_mode='eventlet')
+socket_server = socketio.Server(async_mode='eventlet', cors_allowed_origins='*')
 client_manager = manager.ClientManager(socket_server)
 
 # connect
