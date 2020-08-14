@@ -2,7 +2,8 @@ import socketio
 import random
 
 CLIENT_KEY = 'supersecure'
-URL = 'http://ec2-13-245-35-130.af-south-1.compute.amazonaws.com:8080'
+URL = 'http://ec2-13-245-14-169.af-south-1.compute.amazonaws.com:8080'
+# URL = 'http://127.0.0.1:8000'
 
 # Front-End Client Asbtract Class
 class User:
