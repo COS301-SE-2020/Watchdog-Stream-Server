@@ -17,3 +17,6 @@ poetry.lock
 stream_server.egg-info
 # Other
 *.bat
+https
+*.cert
+*.key
