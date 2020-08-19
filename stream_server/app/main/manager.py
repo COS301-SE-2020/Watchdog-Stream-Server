@@ -80,7 +80,7 @@ class ClientManager():
     def remove_client(self, session_id):
         if session_id in self.clients:
             client = self.clients[session_id]
-            client_id = client.client_id
+            client_id = client.id
             user_id = client.user_id
 
             # Remove it if its a Consumer
