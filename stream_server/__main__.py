@@ -1,10 +1,9 @@
-import os
+from flask import *
+from flask_socketio import *
 from app import create_app
-from flask import Flask, render_template, request, session, Markup, current_app, jsonify
-from flask_socketio import emit, SocketIO
 import eventlet
 
-# eventlet.monkey_patch()
+eventlet.monkey_patch()
 app = create_app()
 
 
@@ -15,8 +14,8 @@ if __name__ == '__main__':
 
         # HTTPS
         # eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen((app_host, int(app_port))),
-        #                                        certfile='stream_server.crt',
-        #                                        keyfile='stream_server.key',
+        #                                        certfile='29742946_ec2-13-245-14-169.af-south-1.compute.amazonaws.com.cert',
+        #                                        keyfile='29742946_ec2-13-245-14-169.af-south-1.compute.amazonaws.com.key',
         #                                        server_side=True),
         #                      app)
         # HTTP

@@ -1,6 +1,5 @@
 # import socketio
 from flask import Flask
-from flask_socketio import SocketIO
 from .main.events import build
 
 def create_app():

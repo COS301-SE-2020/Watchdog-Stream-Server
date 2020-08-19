@@ -2,7 +2,7 @@ import socketio
 import random
 
 CLIENT_KEY = 'supersecure'
-URL = 'https://ec2-13-245-14-169.af-south-1.compute.amazonaws.com:8080'
+URL = 'http://ec2-13-245-14-169.af-south-1.compute.amazonaws.com:8080'
 # URL = 'http://127.0.0.1:8080'
 
 # Front-End Client Asbtract Class
@@ -48,7 +48,13 @@ class Producer(User):
         super(Producer, self).__init__(user_id)
         self.active = False
         self.camera_list = []
-        self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'producer', 'producer_id': producer_id, 'available_cameras': available_cameras, 'client_key': CLIENT_KEY})
+        self.socket.emit('authorize', {
+            'user_id': self.user_id,
+            'client_type': 'producer',
+            'producer_id': producer_id,
+            'available_cameras': available_cameras,
+            'client_key': CLIENT_KEY
+        })
 
     # Start HCP Client Producer
     def activate(self, camera_list):

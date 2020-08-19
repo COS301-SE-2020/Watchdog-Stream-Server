@@ -6,7 +6,6 @@ from . import manager
 def build(app):
     # Build Socket Server
     socket_server = flask_socketio.SocketIO(app, cors_allowed_origins='*')
-    # socket_server = socketio.Server(async_mode='eventlet', cors_allowed_origins='*')
 
     # Build Client Manager
     client_manager = manager.ClientManager(socket_server)
@@ -58,4 +57,4 @@ def build(app):
                 return '202'
         return '204'
 
-    return app
+    return socket_server
