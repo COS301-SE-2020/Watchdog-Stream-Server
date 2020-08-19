@@ -16,7 +16,10 @@ stream_server/tests/stream_user/browser_user/node_modules
 poetry.lock
 stream_server.egg-info
 # Other
-*.bat
 https
+*.bat
 *.cert
+*.crt
+*.csr
 *.key
+*.pem

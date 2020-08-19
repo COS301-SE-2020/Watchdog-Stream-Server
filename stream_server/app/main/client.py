@@ -1,4 +1,5 @@
 import random
+import asyncio
 
 class ClientHandler:
     def __init__(self, session_id, user_id, socket):
@@ -25,6 +26,7 @@ class Producer(ClientHandler):
         self.consumers = {}
         self.active = False
         self.buffer = None
+        self.lock = asyncio.Lock()
 
     # Send signal to producer to activate its broadcast
     def activate(self):
@@ -67,19 +69,25 @@ class Producer(ClientHandler):
             if consumer is not None:
                 consumer.consume(camera_id)
 
-    def clean_ids(self):
+    async def clean_ids(self):
+        await self.lock.acquire()
         self.requested_camera_ids = []
         for client_id, consumer in self.consumers.items():
-            if consumer is None:
+            if consumer is not None and len(consumer.requested_camera_ids) == 0:
                 del self.consumers[client_id]
-            else:
+                break
+
+        for client_id, consumer in self.consumers.items():
+            if consumer.requested_camera_ids is not None:
                 for id in consumer.requested_camera_ids:
                     if id not in self.requested_camera_ids:
                         self.requested_camera_ids.append(id)
+
         if len(self.requested_camera_ids) > 0:
             self.activate()
         else:
             self.deactivate()
+        self.lock.release()
 
     def get_available_ids(self):
         return self.available_camera_ids
@@ -112,7 +120,7 @@ class Consumer(ClientHandler):
 
     # Add Camera IDs to Consumer
     def set_ids(self, camera_ids):
-        self.clear_ids()
+        self.requested_camera_ids = []
         for camera_id in camera_ids:
             self.requested_camera_ids.append(camera_id)
             if self.producer is not None:
@@ -121,7 +129,7 @@ class Consumer(ClientHandler):
     def clear_ids(self):
         self.requested_camera_ids = []
         if self.producer is not None:
-            self.producer.clean_ids()
+            asyncio.get_event_loop().run_until_complete(self.producer.clean_ids())
 
     # Consumer from the Producers Buffer
     def consume(self, camera_id):
