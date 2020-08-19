@@ -39,7 +39,6 @@ def build(app):
         sid = flask.request.sid
         print('producing frame ... ', sid, data)
         if 'camera_id' in data and 'frame' in data:
-            # asyncio.get_event_loop().run_until_complete(
             client_manager.put_frame(
                 sid,
                 data['camera_id'],
@@ -57,4 +56,4 @@ def build(app):
                 return '202'
         return '204'
 
-    return socket_server
+    return app

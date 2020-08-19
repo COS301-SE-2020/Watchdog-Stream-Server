@@ -1,5 +1,4 @@
 import random
-import asyncio
 
 class ClientHandler:
     def __init__(self, session_id, user_id, socket):
@@ -26,7 +25,7 @@ class Producer(ClientHandler):
         self.consumers = {}
         self.active = False
         self.buffer = None
-        self.lock = asyncio.Lock()
+        # self.lock = asyncio.Lock()
 
     # Send signal to producer to activate its broadcast
     def activate(self):
@@ -69,8 +68,8 @@ class Producer(ClientHandler):
             if consumer is not None:
                 consumer.consume(camera_id)
 
-    async def clean_ids(self):
-        await self.lock.acquire()
+    def clean_ids(self):
+        # await self.lock.acquire()
         self.requested_camera_ids = []
         for client_id, consumer in self.consumers.items():
             if consumer is not None and len(consumer.requested_camera_ids) == 0:
@@ -87,7 +86,7 @@ class Producer(ClientHandler):
             self.activate()
         else:
             self.deactivate()
-        self.lock.release()
+        # self.lock.release()
 
     def get_available_ids(self):
         return self.available_camera_ids
@@ -129,7 +128,7 @@ class Consumer(ClientHandler):
     def clear_ids(self):
         self.requested_camera_ids = []
         if self.producer is not None:
-            asyncio.get_event_loop().run_until_complete(self.producer.clean_ids())
+            self.producer.clean_ids()
 
     # Consumer from the Producers Buffer
     def consume(self, camera_id):
