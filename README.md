@@ -1,21 +1,59 @@
-# Watchdog
+# Watchdog - Stream Server
+
+This repository contains the code required fo the stream server in order to run it and enable live streaming on the Wachdog frontend
+
+###Watchdog Repositories
+
+- [API](https://github.com/COS301-SE-2020/Watchdog)
+- [Home Control Panel](https://github.com/COS301-SE-2020/Watchdog-API)
+- [Web Apllication](https://github.com/COS301-SE-2020/Watchdog-FrontEnd/tree/master/watchdog-frontend)
+- [Mobile Application](https://github.com/COS301-SE-2020/Watchdog-FrontEnd/tree/master/WatchdogApp)
+- [Stream Server](https://github.com/COS301-SE-2020/Watchdog-Stream-Server)
+
+
+### Demo
+- [LynkSolutions-Demo3](https://drive.google.com/file/d/1bSRqRJBJ-5sPx4G1vCkq2Al8BcTPFYOs/view?usp=sharing)
+
+
+### Documentation
+- [SRS Document]()
+- [Technical Installation Manual]()
+- [Watchdog User Manual](https://drive.google.com/file/d/1gu36_44IbnKeGjC61VaDXLu3mLKEqTvr/view?usp=sharing)
+- [Coding Standards Document](https://drive.google.com/file/d/1X4IsmHWHwBjvmg1aaUua1HiC6rs6w5pO/view?usp=sharing)
+- [Architectural Designs Document]()
+- [Project Management Tool (Clubhouse)](https://app.clubhouse.io/lynksolutions/) (If you 
+require access please email a team member and we will add you to our workspace, since clubhouse does not allow external viewing)
+
+
+### Deployed Website Link:
+- [Watchdog System](https://master.dtul6cza66juk.amplifyapp.com/)
+
 
 ### Project Description:
 
-For the South African household who need an efficient way to ensure their safety and security the Watchdog system is a home security system that utilizes machine learning to identify an intruder and alert users and security companies on the potential breach. Unlike traditional surveillance systems that keep a backlog of redundant video storage our product utilizes machine learning and a modern cloud architecture to deliver a real-time security system.
+For the South African household who need an efficient way to ensure their safety and security the Watchdog system is a home security system that utilizes machine 
+learning to identify an intruder and alert users and security companies on the potential breach. Unlike traditional surveillance systems that keep a backlog of 
+redundant video storage our product utilizes machine learning and a modern cloud architecture to deliver a real-time security system.
 
-- [LynkSolutions-Demo1](https://drive.google.com/drive/folders/11mjzStK6vKuCq91ZO17zv6nycX_Spvi_)
-- [Functional Requirements Document](https://drive.google.com/file/d/1mdyx54MLTo0vTAEx2nm5wwFgWU_ULEks/view?usp=sharing)
-- [Project Management Tool (Clubhouse)](https://app.clubhouse.io/lynksolutions/) (If you require access please email a team member and we will add you to our workspace, since clubhouse does not allow external viewing)
+### Build Instructions:
+
+**Prerequisites**:
+- python
+- poetry
 
 
-### How to access our Code
+**Intructions**:
+1. Clone this repo
 
-1. Go to the AWS development console using the link provided
-2. Login with the credentials provided
-3. Continue to this link: <https://eu-west-1.console.aws.amazon.com/codesuite/codecommit/repositories?region=eu-west-1#>
-4. Click on Home_Control_Panel
-..You are now in the Watchdog Repository..
+
+### Usage Instructions
+
+
+First of all begin by changing your directory to stream_server
+
+    
+- poetry run python stream_server
+
 
 ### Members
 
@@ -53,3 +91,6 @@ I have been exposed to an event-driven system that adopted modern cloud architec
 ##### Armin van Wyk
 
 I have been involved in a multitude of projects inside and outside of the EBIT faculty. I have particular interest in front-end multimedia design to back-end REST API and hosting tasks. I have familiarity in databases both with and without SQ. I can use these skills in the request handling and data handling of our projects and ensure validated, clean and lightweight data.
+
+
+
