@@ -2,38 +2,34 @@
 
 This repository contains the code required fo the stream server in order to run it and enable live streaming on the Wachdog frontend
 
-###Watchdog Repositories
-
-- [API](https://github.com/COS301-SE-2020/Watchdog)
-- [Home Control Panel](https://github.com/COS301-SE-2020/Watchdog-API)
-- [Web Apllication](https://github.com/COS301-SE-2020/Watchdog-FrontEnd/tree/master/watchdog-frontend)
-- [Mobile Application](https://github.com/COS301-SE-2020/Watchdog-FrontEnd/tree/master/WatchdogApp)
-- [Stream Server](https://github.com/COS301-SE-2020/Watchdog-Stream-Server)
-
-
-### Demo
-- [LynkSolutions-Demo3](https://drive.google.com/file/d/1bSRqRJBJ-5sPx4G1vCkq2Al8BcTPFYOs/view?usp=sharing)
-
-
-### Documentation
-- [SRS Document]()
-- [Technical Installation Manual]()
-- [Watchdog User Manual](https://drive.google.com/file/d/1gu36_44IbnKeGjC61VaDXLu3mLKEqTvr/view?usp=sharing)
-- [Coding Standards Document](https://drive.google.com/file/d/1X4IsmHWHwBjvmg1aaUua1HiC6rs6w5pO/view?usp=sharing)
-- [Architectural Designs Document]()
-- [Project Management Tool (Clubhouse)](https://app.clubhouse.io/lynksolutions/) (If you 
-require access please email a team member and we will add you to our workspace, since clubhouse does not allow external viewing)
-
-
-### Deployed Website Link:
-- [Watchdog System](https://master.dtul6cza66juk.amplifyapp.com/)
-
+### Watchdog Repositories
+|[Home Control Panel](https://github.com/COS301-SE-2020/Watchdog)|[API](https://github.com/COS301-SE-2020/Watchdog-API)|[Web Application](https://github.com/COS301-SE-2020/Watchdog-FrontEnd/tree/master/watchdog-frontend)|[Mobile Application](https://github.com/COS301-SE-2020/Watchdog-FrontEnd/tree/master/WatchdogApp)|[Stream Server](hhttps://github.com/COS301-SE-2020/Watchdog-Stream-Server)|
+|---|---|---|---|---|
 
 ### Project Description:
 
 For the South African household who need an efficient way to ensure their safety and security the Watchdog system is a home security system that utilizes machine 
 learning to identify an intruder and alert users and security companies on the potential breach. Unlike traditional surveillance systems that keep a backlog of 
 redundant video storage our product utilizes machine learning and a modern cloud architecture to deliver a real-time security system.
+
+
+### Demo Videos
+- [LynkSolutions-Demo1](https://drive.google.com/file/d/1mdyx54MLTo0vTAEx2nm5wwFgWU_ULEks/view?usp=sharing)
+- [LynkSolutions-Demo2](https://drive.google.com/file/d/1JfVWYLl65t5PzllO-vNKPR-YlOt7DRnX/view?usp=sharing)
+- [LynkSolutions-Demo3](https://drive.google.com/file/d/1bSRqRJBJ-5sPx4G1vCkq2Al8BcTPFYOs/view?usp=sharing)
+
+
+### Documentation
+- [SRS Document - version 3](https://drive.google.com/file/d/1dWVx8BrT0Nt8GKdyHLqmjKYzg1aGlRWS/view?usp=sharing)
+- [Technical Installation Manual](https://drive.google.com/file/d/1ouZquOIizf8omvOCnzMCG-wwS2qJyhzi/view?usp=sharing)
+- [Watchdog User Manual](https://drive.google.com/file/d/1gu36_44IbnKeGjC61VaDXLu3mLKEqTvr/view?usp=sharing)
+- [Coding Standards Document](https://drive.google.com/file/d/1X4IsmHWHwBjvmg1aaUua1HiC6rs6w5pO/view?usp=sharing)
+- [Project Management Tool (Clubhouse)](https://app.clubhouse.io/lynksolutions/stories) (If you require access please email a team member and we will add you to our workspace, since clubhouse does not allow external viewing)
+
+
+### Deployed Website Link:
+- [Watchdog System](https://master.dtul6cza66juk.amplifyapp.com/)
+
 
 ### Build Instructions:
 
@@ -44,15 +40,8 @@ redundant video storage our product utilizes machine learning and a modern cloud
 
 **Intructions**:
 1. Clone this repo
-
-
-### Usage Instructions
-
-
-First of all begin by changing your directory to stream_server
-
-    
-- poetry run python stream_server
+2. First of all begin by changing your directory to Stream_Server ```cd Stream_Server```
+3. poetry run python stream_server
 
 
 ### Members
@@ -66,7 +55,10 @@ First of all begin by changing your directory to stream_server
 |Jonathan Sundy|u18079581|<https://jsundy.github.io>|<https://www.linkedin.com/in/jonathen-sundy-79b33b168/>|
 |Armin van Wyk|u18008632|<https://github.com/BigMacDaddy007>|<https://www.linkedin.com/in/armin-van-wyk-b714931a9/>|
 
-#### Profiles
+<details>
+<summary>
+<h1>Profiles</h1>
+</summary>
 
 ##### Luqmaan Badat
 
@@ -92,5 +84,4 @@ I have been exposed to an event-driven system that adopted modern cloud architec
 
 I have been involved in a multitude of projects inside and outside of the EBIT faculty. I have particular interest in front-end multimedia design to back-end REST API and hosting tasks. I have familiarity in databases both with and without SQ. I can use these skills in the request handling and data handling of our projects and ensure validated, clean and lightweight data.
 
-
-
+</details>
