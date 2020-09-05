@@ -80,7 +80,7 @@ class ClientManager():
     def remove_client(self, session_id):
         if session_id in self.clients:
             client = self.clients[session_id]
-            client_id = client.client_id
+            client_id = client.id
             user_id = client.user_id
 
             # Remove it if its a Consumer
@@ -98,25 +98,7 @@ class ClientManager():
 
             self.clients[session_id] = None
             del self.clients[session_id]
-            print('Client disconnected...')
-
-        if client is not None:
-            client_id = client.id
-            user_id = client.user_id
-
-            if user_id in self.consumers:
-                if client_id in self.consumers[user_id]:
-                    self.consumers[user_id][client_id].clear_ids()
-                    self.consumers[user_id][client_id] = None
-                    del self.consumers[user_id][client_id]
-
-            if user_id in self.producers:
-                if client_id in self.producers[user_id]:
-                    self.producers[user_id][client_id] = None
-                    del self.producers[user_id][client_id]
-
-            del self.clients[client_id]
-            print('Client disconnected...')     
+            print('Client disconnected...') 
 
     def send_available_cameras(self, session_id, user_id):
         available_producers = {}
