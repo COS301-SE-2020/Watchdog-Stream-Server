@@ -1,5 +1,5 @@
-import app
 import eventlet
+from app import app
 
 
 eventlet.monkey_patch()
