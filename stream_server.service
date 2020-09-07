@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance to serve Stream Server
+After=network.target
+
+[Service]
+User=jordan
+Group=www-data
+WorkingDirectory=/home/jordan/shared/Stream_Server
+Environment="PATH=/home/jordan/shared/Stream_Server"
+ExecStart=/usr/bin/python3 /home/jordan/shared/Stream_Server/stream_server
+
+[Install]
+WantedBy=multi-user.target
