@@ -1,16 +1,21 @@
-import eventlet
 import app
-from app import create_app
+import eventlet
+
 
 eventlet.monkey_patch()
 
-server_app = create_app()
+server_app = app.create_app()
 
-if __name__ == '__main__':
+
+def main():
     try:
         app_host = '127.0.0.1'
-        app_port = 8008
+        app_port = 8080
         eventlet.wsgi.server(eventlet.listen((app_host, int(app_port))), server_app)
 
     except Exception as e:
         print(e)
+
+
+if __name__ == '__main__':
+    main()

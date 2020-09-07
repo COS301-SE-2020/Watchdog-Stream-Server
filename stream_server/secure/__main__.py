@@ -1,3 +1,4 @@
+import os
 from getpass import getpass
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -9,6 +10,8 @@ from pki_helpers import (
     generate_csr
 )
 
+if not os.path.exists('ssl'):
+    os.mkdir('ssl')
 
 # Details
 country = 'ZA'
