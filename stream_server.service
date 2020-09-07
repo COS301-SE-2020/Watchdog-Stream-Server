@@ -7,7 +7,7 @@ User=jordan
 Group=www-data
 WorkingDirectory=/home/ec2-user/Stream_Server
 Environment="PATH=/home/ec2-user/Stream_Server"
-ExecStart=/usr/bin/python3 /home/ec2-user/Stream_Server/stream_server
+ExecStart=/usr/bin/python3 /home/ec2-user/Stream_Server/serve.py
 
 [Install]
 WantedBy=multi-user.target

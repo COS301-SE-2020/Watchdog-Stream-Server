@@ -1,5 +1,6 @@
 import eventlet
-from app import app
+import stream_server
+from stream_server.app import app
 
 
 eventlet.monkey_patch()
