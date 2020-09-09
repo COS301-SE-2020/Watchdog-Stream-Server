@@ -7,11 +7,11 @@
 # Python-Cache
 .pytest_cache
 stream_server/__pycache__
-stream_server/app/__pycache__
-stream_server/app/main/__pycache__
 stream_server/tests/__pycache__
 stream_server/client/__pycache__
 stream_server/secure/__pycache__
+stream_server/app/__pycache__
+stream_server/app/main/__pycache__
 # Poetry
 poetry.lock
 stream_server.egg-info

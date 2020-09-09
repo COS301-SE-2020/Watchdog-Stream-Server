@@ -1,16 +1,15 @@
 import eventlet
 import stream_server
-from stream_server.app import app
 
 
 eventlet.monkey_patch()
 
-server_app = app.create_app()
+server_app = stream_server.app.app.create_app()
 
 
 def main():
     try:
-        app_host = '127.0.0.1'
+        app_host = '0.0.0.0'
         app_port = 8080
         eventlet.wsgi.server(eventlet.listen((app_host, int(app_port))), server_app)
 

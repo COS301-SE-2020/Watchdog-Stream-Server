@@ -1,9 +1,11 @@
 import socketio
 import random
+import urllib3
 
 CLIENT_KEY = 'supersecure'
-# URL = 'http://ec2-13-245-14-169.af-south-1.compute.amazonaws.com:8080'
-URL = 'https://10.0.0.107:443'
+URL = 'https://ec2-13-244-153-139.af-south-1.compute.amazonaws.com:443/'
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Front-End Client Asbtract Class
 class User:
