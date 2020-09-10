@@ -18,7 +18,7 @@ country = 'ZA'
 state = 'Western Province'
 locality = 'Cape Town'
 org = 'Lynk Solutions, Watchdog'
-hostname = 'ec2-13-245-14-169.af-south-1.compute.amazonaws.com'
+hostname = 'ec2-13-244-153-139.af-south-1.compute.amazonaws.com'
 
 # CA
 ca_public_key_path = "ssl/ca.crt"
