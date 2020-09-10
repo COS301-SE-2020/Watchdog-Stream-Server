@@ -1,10 +1,10 @@
 import eventlet
 import stream_server
-
+from stream_server.app import app
 
 eventlet.monkey_patch()
 
-server_app = stream_server.app.app.create_app()
+server_app = app.create_app()
 
 
 def main():

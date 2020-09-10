@@ -3,7 +3,8 @@ import random
 import urllib3
 
 CLIENT_KEY = 'supersecure'
-URL = 'https://ec2-13-244-153-139.af-south-1.compute.amazonaws.com:443/'
+# URL = 'https://ec2-13-244-153-139.af-south-1.compute.amazonaws.com:443/'
+URL = 'http://127.0.0.1:8008'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -37,6 +38,10 @@ class User:
         @self.socket.on('available-views')
         def available_views(data):
             print('available views ... ', data, self.id)
+            # probably want to activate all available streams
+            for producer_id, camera_ids in data['producers'].items():
+                self.set_cameras(producer_id, camera_ids)
+                break
 
     @staticmethod
     def generate_id(user):
