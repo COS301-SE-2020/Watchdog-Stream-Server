@@ -3,7 +3,7 @@ Description=uWSGI instance to serve Stream Server
 After=network.target
 
 [Service]
-User=jordan
+User=ubuntu
 Group=www-data
 WorkingDirectory=/home/ubuntu/Stream_Server
 Environment="PATH=/home/ubuntu/Stream_Server"
