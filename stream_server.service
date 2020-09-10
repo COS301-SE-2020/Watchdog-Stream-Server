@@ -5,9 +5,9 @@ After=network.target
 [Service]
 User=jordan
 Group=www-data
-WorkingDirectory=/home/ec2-user/Stream_Server
-Environment="PATH=/home/ec2-user/Stream_Server"
-ExecStart=/usr/bin/python3 /home/ec2-user/Stream_Server/serve.py
+WorkingDirectory=/home/ubuntu/Stream_Server
+Environment="PATH=/home/ubuntu/Stream_Server"
+ExecStart=/usr/bin/python3 /home/ubuntu/Stream_Server/serve.py
 
 [Install]
 WantedBy=multi-user.target
