@@ -10,7 +10,7 @@ server_app = app.create_app()
 def main():
     try:
         app_host = '0.0.0.0'
-        app_port = 8080
+        app_port = 5555
         eventlet.wsgi.server(eventlet.listen((app_host, int(app_port))), server_app)
 
     except Exception as e:
