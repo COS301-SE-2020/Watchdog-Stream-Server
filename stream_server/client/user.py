@@ -3,7 +3,7 @@ import random
 import urllib3
 
 CLIENT_KEY = 'supersecure'
-URL = 'https://ec2-13-244-153-139.af-south-1.compute.amazonaws.com/live/'
+URL = 'https://ec2-13-244-153-139.af-south-1.compute.amazonaws.com:443/'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

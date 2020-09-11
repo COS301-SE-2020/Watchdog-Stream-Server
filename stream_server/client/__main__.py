@@ -21,13 +21,17 @@ if user_type == 'consumer':
     print('Cameras : ', cams)
     client = Consumer(user_id)
     client.set_cameras(producer_id, cams)
-    # client.socket.disconnect()
+    time.sleep(20)
+    client.socket.disconnect()
 
 elif user_type == 'producer':
     client = Producer(user_id, producer_id, cams)
-    while True:
+    count = 1
+    while count < 10:
         cams = client.camera_list
         for index in range(len(cams)):
             client.produce(cams[index], str(random.getrandbits(128)))
-        time.sleep(0.5)
-    # client.socket.disconnect()
+        time.sleep(1)
+        count += 1
+    time.sleep(10)
+    client.socket.disconnect()
