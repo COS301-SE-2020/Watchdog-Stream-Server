@@ -16,8 +16,6 @@ stream_server/app/main/__pycache__
 poetry.lock
 stream_server.egg-info
 # Other
-https
-*.bat
 *.cert
 *.crt
 *.csr
