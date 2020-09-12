@@ -20,6 +20,9 @@ class ClientManager():
             print('User authentication failed...')
             return client
 
+        if session_id in self.clients:
+            self.remove_client(session_id)
+
         # Connect to Dynamo DB, check the user_id and client_key is valid - Client Key's Should be generated at API
         client_key = str(environ['client_key'])
         # Get Client Type
@@ -63,10 +66,9 @@ class ClientManager():
             # check if any consumer might be trying to view this producer
             if user_id in self.consumers:
                 for client_id, consumer in self.consumers[user_id].items():
-                    if consumer.producer_id == producer_id:
-                        if consumer.check_producer(None) or consumer.check_producer(producer_id) is False:
-                            consumer.set_producer(producer)
-                            self.send_available_cameras(consumer.session_id, consumer.user_id)
+                    if consumer.check_producer(None) or consumer.check_producer(producer_id) is False:
+                        consumer.set_producer(producer)
+                        self.send_available_cameras(consumer.session_id, consumer.user_id)
 
         return producer
 
@@ -76,7 +78,6 @@ class ClientManager():
             self.consumers[user_id] = {}
 
         consumer = Consumer(self.socket, session_id, user_id)
-
         if consumer is not None:
             self.consumers[user_id][consumer.id] = consumer
             self.send_available_cameras(session_id, user_id)
@@ -87,27 +88,24 @@ class ClientManager():
     def remove_client(self, session_id):
         if session_id in self.clients:
             client = self.clients[session_id]
-            client_id = client.id
             user_id = client.user_id
+            client_id = client.id
 
+            self.clients[session_id] = None
             # Remove it if its a Consumer
             if user_id in self.consumers:
                 if client_id in self.consumers[user_id]:
                     self.consumers[user_id][client_id].unset_producer()
                     # Set to none so can be deleted from clients without error
-                    self.consumers[user_id][client_id] = None
                     del self.consumers[user_id][client_id]
-
             # Remove it if its a Producer
             if user_id in self.producers:
                 if client_id in self.producers[user_id]:
                     self.producers[user_id][client_id].detach_consumers()
                     # Set to none so can be deleted from clients without error
-                    self.producers[user_id][client_id] = None
                     del self.producers[user_id][client_id]
-
             del self.clients[session_id]
-            print('Client disconnected...') 
+            print('Client disconnected...')
 
     # emits dictionary of producer_id : available camera list
     def send_available_cameras(self, session_id, user_id):
@@ -143,7 +141,6 @@ class ClientManager():
 
             if not producing:
                 print('Warning: Producer not present!')
-
             client.set_cameras(camera_ids)
 
     def put_frame(self, session_id, camera_id, frame):

@@ -23,8 +23,9 @@ def build(app):
             sid = flask.request.sid
             print('disconnecting ... ', sid)
             client_manager.remove_client(sid)
-        except Exception:
+        except Exception as error:
             print('error disconnecting ... ', sid)
+            print(error)
 
     # authorize : { user_id : string, client_type : string, client_key : string }
     @socket_server.on('authorize')

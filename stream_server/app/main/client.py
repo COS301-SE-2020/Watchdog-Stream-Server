@@ -3,7 +3,8 @@ import random
 
 class ClientHandler:
     def __init__(self, session_id, user_id, socket):
-        self.id = ClientHandler.generate_id(self)
+        # self.id = ClientHandler.generate_id(self)
+        self.id = user_id + session_id
         self.user_id = user_id
         self.session_id = session_id
         self.socket = socket
@@ -80,9 +81,9 @@ class Producer(ClientHandler):
 
     # detach consumers
     def detach_consumers(self):
-        consumers = self.consumers.items()
-        for client_id, consumer in consumers:
-            self.detach_consumer(consumer)
+        consumers = list(self.consumers.keys())
+        for client_id in consumers:
+            self.detach_consumer(self.consumers[client_id])
 
     # Add Camera ID to Producer
     def add_camera(self, id):
