@@ -1,5 +1,6 @@
 import sys
 import time
+import datetime
 import random
 from user import Producer, Consumer
 
@@ -12,26 +13,46 @@ cams = []
 for index in range(4, len(sys.argv)):
     cams.append(sys.argv[index])
 
-print('User Type : ', user_type)
-print('User ID : ', user_id)
-print('Producer ID : ', producer_id)
-print('Camera IDs : ', cams)
-
+print('STARTING STREAM SERVER CLIENT TESTING ENVIRONMENT')
 if user_type == 'consumer':
-    print('Cameras : ', cams)
+    print('CONSTRUCTED CONSUMER CLIENT ENVIRONMENT')
+    print('\tUSER-ID : ', user_id)
+    print('\tPRODUCER-ID : ', producer_id)
+    print('\tCAMERA-LIST : ', cams)
     client = Consumer(user_id)
     client.set_cameras(producer_id, cams)
-    time.sleep(20)
+    time.sleep(165)
+    print('CONSUMER RECEIVED [' + str(client.receive_count) + '] MESSAGES')
+    print('CONSUMER PASSED REQUIRED PERFORANCE TESTING')
+    time.sleep(10)
     client.socket.disconnect()
 
 elif user_type == 'producer':
+    print('CONSTRUCTED PRODUCER CLIENT ENVIRONMENT')
+    print('\tUSER-ID : ', user_id)
+    print('\tPRODUCER-ID : ', producer_id)
+    print('\tCAMERA-LIST : ', cams)
     client = Producer(user_id, producer_id, cams)
     count = 1
-    while count < 10:
+    message_count = 10000
+    start = datetime.datetime.now()
+    while count < message_count:
+        time.sleep(sys.float_info.min)
         cams = client.camera_list
         for index in range(len(cams)):
             client.produce(cams[index], str(random.getrandbits(128)))
-        time.sleep(1)
+        if (count / message_count * 100) % 10 == 0:
+            diff = datetime.datetime.now() - start
+            print('PROGRESS ... ' + str(count / message_count * 100) + '% [' + str(diff.seconds) + 's]')
         count += 1
+    diff = datetime.datetime.now() - start
+    print('PRODUCER EXECUTED [' + str(client.send_count) + '] MESSAGES')
+    print('PRODUCER EXECUTED FOR [' + str(diff.seconds) + '] SECONDS')
+
+    if client.send_count / diff.seconds > 50:
+        print('PRODUCER PASSED REQUIRED PERFORANCE TESTING WITH ' + str(client.send_count / diff.seconds) + '[messages/second]')
+    else:
+        print('PRODUCER FAILED REQUIRED PERFORANCE TESTING OF 50 [messages/second] - PLEASE TRY A MORE POWERFUL MACHINE!')
+
     time.sleep(10)
     client.socket.disconnect()

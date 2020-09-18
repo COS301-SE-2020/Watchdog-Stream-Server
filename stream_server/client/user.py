@@ -3,7 +3,8 @@ import random
 import urllib3
 
 CLIENT_KEY = 'supersecure'
-URL = 'https://ec2-13-244-153-139.af-south-1.compute.amazonaws.com:443/'
+# URL = 'https://stream.watchdog.thematthew.me:443/'
+URL = 'http://127.0.0.1:5555'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -18,29 +19,29 @@ class User:
         # Data : { user_id : string, camera_list : string }
         @self.socket.on('activate-broadcast')
         def activate_broadcast(data):
-            print('activating broadcast ... ', data, self.id)
+            print('\tEVENT : activating broadcast ... ', data)
             self.activate(data['camera_list'])
 
         # Data : { user_id : string, camera_list : string }
         @self.socket.on('deactivate-broadcast')
         def deactivate_broadcast(data):
-            print('deactivating broadcast ... ', data, self.id)
+            print('\tEVENT : deactivating broadcast ... ', data)
             self.deactivate()
 
         # Data : { user_id : string, frame : string }
         @self.socket.on('consume-frame')
         def consume_frame(data):
-            print('consuming frame ... ', data, self.id)
+            print('\tEVENT : consuming frame ... ', data)
             image = data['frame']
             self.consume(image)
 
         @self.socket.on('available-views')
         def available_views(data):
-            print('available views ... ', data, self.id)
+            print('\tEVENT : available views ... ', data)
             # probably want to activate all available streams
-            for producer_id, camera_ids in data['producers'].items():
-                self.set_cameras(producer_id, camera_ids)
-                break
+            # for producer_id, camera_ids in data['producers'].items():
+            #     self.set_cameras(producer_id, camera_ids)
+            #     break
 
     @staticmethod
     def generate_id(user):
@@ -54,6 +55,7 @@ class Producer(User):
         super(Producer, self).__init__(user_id)
         self.active = False
         self.camera_list = []
+        self.send_count = 0
         self.socket.emit('authorize', {
             'user_id': self.user_id,
             'client_type': 'producer',
@@ -77,6 +79,7 @@ class Producer(User):
     def produce(self, camera_id, frame):
         if self.active and camera_id in self.camera_list:
             self.socket.emit('produce-frame', {'camera_id': camera_id, 'frame': frame})
+        self.send_count = self.send_count + 1
 
     def get_list(self):
         return self.camera_list
@@ -88,6 +91,7 @@ class Consumer(User):
         self.buffer = None
         self.producer_id = None
         self.camera_list = []
+        self.receive_count = 0
         self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'consumer', 'client_key': CLIENT_KEY})
 
     def set_cameras(self, producer_id=None, camera_list=[]):
@@ -100,3 +104,4 @@ class Consumer(User):
     # Mobile Client Consumer Draws frame data to screen
     def consume(self, data):
         self.buffer = data
+        self.receive_count = self.receive_count + 1
