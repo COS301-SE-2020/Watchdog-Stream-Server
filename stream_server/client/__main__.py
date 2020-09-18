@@ -54,5 +54,7 @@ elif user_type == 'producer':
     else:
         print('PRODUCER FAILED REQUIRED PERFORANCE TESTING OF 50 [messages/second] - PLEASE TRY A MORE POWERFUL MACHINE!')
 
+    assert(client.send_count / diff.seconds > 50)
+    
     time.sleep(10)
     client.socket.disconnect()
