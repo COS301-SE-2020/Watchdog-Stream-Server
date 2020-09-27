@@ -4,23 +4,30 @@ import datetime
 import random
 from user import Producer, Consumer
 
-# producer/consumer user_id prod_id cam_id1 cam_id2 cam_id3 cam_id4 ...
+# producer user_id prod_id cam_id1 cam_id2 cam_id3 cam_id4 ...
+# consumer user_id - prod_id1 cam_id1 cam_id2 - prod_id2 cam_id3 cam_id4 ...
 
 user_type = sys.argv[1]
 user_id = sys.argv[2]
-producer_id = sys.argv[3]
-cams = []
-for index in range(4, len(sys.argv)):
-    cams.append(sys.argv[index])
 
 print('STARTING STREAM SERVER CLIENT TESTING ENVIRONMENT')
 if user_type == 'consumer':
+    producers = {}
+    for index in range(3, len(sys.argv)):
+        if sys.argv[index - 1] == '-':
+            pindex = sys.argv[index]
+            cameras = []
+            for new_index in range(index + 1, len(sys.argv)):
+                if sys.argv[new_index] == '-':
+                    break
+                cameras.append(sys.argv[new_index])
+            producers[pindex] = cameras
+
     print('CONSTRUCTED CONSUMER CLIENT ENVIRONMENT')
     print('\tUSER-ID : ', user_id)
-    print('\tPRODUCER-ID : ', producer_id)
-    print('\tCAMERA-LIST : ', cams)
+    print('\tPRODUCERS: ', producers)
     client = Consumer(user_id)
-    client.set_cameras(producer_id, cams)
+    client.set_cameras(producers)
     time.sleep(165)
     print('CONSUMER RECEIVED [' + str(client.receive_count) + '] MESSAGES')
     print('CONSUMER PASSED REQUIRED PERFORANCE TESTING')
@@ -28,6 +35,11 @@ if user_type == 'consumer':
     client.socket.disconnect()
 
 elif user_type == 'producer':
+    producer_id = sys.argv[3]
+    cams = []
+    for index in range(4, len(sys.argv)):
+        cams.append(sys.argv[index])
+
     print('CONSTRUCTED PRODUCER CLIENT ENVIRONMENT')
     print('\tUSER-ID : ', user_id)
     print('\tPRODUCER-ID : ', producer_id)
@@ -37,6 +49,7 @@ elif user_type == 'producer':
     message_count = 10000
     start = datetime.datetime.now()
     while count < message_count:
+        time.sleep(1)
         time.sleep(sys.float_info.min)
         cams = client.camera_list
         for index in range(len(cams)):

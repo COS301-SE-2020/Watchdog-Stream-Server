@@ -89,19 +89,14 @@ class Consumer(User):
     def __init__(self, user_id):
         super(Consumer, self).__init__(user_id)
         self.buffer = None
-        self.producer_id = None
-        self.camera_list = []
         self.receive_count = 0
         self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'consumer', 'client_key': CLIENT_KEY})
 
-    def set_cameras(self, producer_id=None, camera_list=[]):
-        if producer_id is not None:
-            self.producer_id = producer_id
-        self.camera_list.extend(x for x in camera_list if x not in self.camera_list)
-        if self.producer_id is not None:
-            self.socket.emit('consume-view', {'producer_id': self.producer_id, 'camera_list': self.camera_list})
+    def set_cameras(self, producers):
+        self.socket.emit('consume-view', {'producers': producers})
 
     # Mobile Client Consumer Draws frame data to screen
     def consume(self, data):
         self.buffer = data
+        print(self.buffer)
         self.receive_count = self.receive_count + 1

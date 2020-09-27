@@ -27,6 +27,16 @@ def build(app):
             print('error disconnecting ... ', sid)
             print(error)
 
+    @socket_server.on_error_default  # handles all namespaces without an explicit error handler
+    def default_error_handler(e):
+        sid = flask.request.sid
+        print('error ... ', e, sid)
+
+    @socket_server.on('pulse')
+    def handle_pulse(data):
+        sid = flask.request.sid
+        client_manager.register(sid)
+
     # authorize : { user_id : string, client_type : string, client_key : string }
     @socket_server.on('authorize')
     def handle_auth(data):
@@ -50,14 +60,15 @@ def build(app):
             )
         return '200'
 
-    # consume-view : { producer_id : string, camera_list : [] }
+    # consume-view : { producers : { producer_id : [camera_list], ... } }
     @socket_server.on('consume-view')
     def handle_view(data):
         sid = flask.request.sid
         print('setting camera views ... ', data)
-        if 'producer_id' in data and 'camera_list' in data:
-            if client_manager.set_cameras(sid, data['producer_id'], data['camera_list']):
+        if 'producers' in data:
+            if client_manager.set_cameras(sid, data['producers']):
                 return '202'
         return '204'
 
+    client_manager.start()
     return app
