@@ -27,11 +27,13 @@ def build(app):
             print('error disconnecting ... ', sid)
             print(error)
 
-    @socket_server.on_error_default  # handles all namespaces without an explicit error handler
+    # handles all namespaces without an explicit error handler
+    @socket_server.on_error_default
     def default_error_handler(e):
         sid = flask.request.sid
         print('error ... ', e, sid)
 
+    # pulse : tells server you're still connected
     @socket_server.on('pulse')
     def handle_pulse(data):
         sid = flask.request.sid
@@ -51,7 +53,7 @@ def build(app):
     @socket_server.on('produce-frame')
     def handle_broadcast(data):
         sid = flask.request.sid
-        print('producing frame ... ', sid, data)
+        # print('producing frame ... ', sid)
         if 'camera_id' in data and 'frame' in data:
             client_manager.put_frame(
                 sid,

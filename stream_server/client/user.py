@@ -3,8 +3,7 @@ import random
 import urllib3
 
 CLIENT_KEY = 'supersecure'
-# URL = 'https://stream.watchdog.thematthew.me:443/'
-URL = 'http://127.0.0.1:5555'
+URL = 'https://stream.watchdog.thematthew.me:443/'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -28,7 +27,7 @@ class User:
             print('\tEVENT : deactivating broadcast ... ', data)
             self.deactivate()
 
-        # Data : { user_id : string, frame : string }
+        # Data : { camera_id : string, frame : string }
         @self.socket.on('consume-frame')
         def consume_frame(data):
             print('\tEVENT : consuming frame ... ', data)
@@ -38,10 +37,7 @@ class User:
         @self.socket.on('available-views')
         def available_views(data):
             print('\tEVENT : available views ... ', data)
-            # probably want to activate all available streams
-            # for producer_id, camera_ids in data['producers'].items():
-            #     self.set_cameras(producer_id, camera_ids)
-            #     break
+            self.set_cameras(data['producers'])
 
     @staticmethod
     def generate_id(user):

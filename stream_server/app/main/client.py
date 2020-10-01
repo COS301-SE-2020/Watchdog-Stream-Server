@@ -7,7 +7,6 @@ TIMEOUT = 30
 
 class ClientHandler:
     def __init__(self, session_id, user_id, socket):
-        # self.id = ClientHandler.generate_id(self)
         self.id = user_id + session_id
         self.user_id = user_id
         self.session_id = session_id
@@ -44,6 +43,9 @@ class Producer(ClientHandler):
         self.requested_ids = []
         self.buffer = None
         Producer.producers[self.producer_id] = self
+
+    def set_available(self, available_ids):
+        self.available_ids = available_ids
 
     # Send signal to producer to activate its broadcast
     def activate(self):
@@ -124,11 +126,15 @@ class Producer(ClientHandler):
 
     # Accept broacasted frame
     def produce(self, camera_id, frame):
+        print('producing frame ... ', camera_id)
         self.buffer = frame
-        consumers = self.consumers.items()
-        for client_id, consumer in consumers:
-            if consumer is not None:
-                consumer.consume(self.producer_id, camera_id)
+        sent = False
+        consumer_keys = self.consumers.keys()
+        for client_id in consumer_keys:
+            if client_id in self.consumers:
+                sent = sent or self.consumers[client_id].consume(self.producer_id, camera_id, self.buffer)
+        if not sent:
+            self.requested_ids.remove(camera_id)
 
     def get_type(self):
         return 'producer'
@@ -192,13 +198,15 @@ class Consumer(ClientHandler):
                     self.producers[producer_id].add_camera(camera_id)
 
     # Consumes from the Producers Buffer
-    def consume(self, producer_id, camera_id):
+    def consume(self, producer_id, camera_id, frame):
         if self.producers[producer_id] is not None and camera_id in self.requested_ids[producer_id]:
             # emit frame bytecode to this client
             self.socket.emit('consume-frame', {
                 'camera_id': camera_id,
-                'frame': self.producers[producer_id].buffer
+                'frame': frame
             }, room=self.session_id)
+            return True
+        return False
 
     def get_type(self):
         return 'consumer'

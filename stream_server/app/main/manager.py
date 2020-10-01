@@ -78,9 +78,15 @@ class ClientManager(threading.Thread):
             self.producers[user_id] = {}
 
         if session_id in self.producers[user_id]:
-            self.remove_client(session_id)
+            if self.producers[user_id][session_id].producer_id != producer_id:
+                self.remove_client(session_id)
 
-        producer = Producer(self.socket, session_id, user_id, producer_id, available_cameras)
+        if session_id in self.producers[user_id]:
+            producer = self.producers[user_id][session_id]
+            producer.set_available(available_cameras)
+        else:
+            producer = Producer(self.socket, session_id, user_id, producer_id, available_cameras)
+
         if producer is not None:
             self.producers[user_id][producer.session_id] = producer
             # check if any consumer might be trying to view this producer
