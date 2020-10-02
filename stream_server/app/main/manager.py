@@ -106,7 +106,7 @@ class ClientManager(threading.Thread):
         producers = None
         if session_id in self.consumers[user_id]:
             producers = self.consumers[user_id][session_id].producers.items()
-            self.remove_client(session_id)
+            # self.remove_client(session_id)
 
         consumer = Consumer(self.socket, session_id, user_id)
 
