@@ -166,7 +166,7 @@ class ClientManager(threading.Thread):
                             self.requested[producer_id] = session_id
                     client.set_cameras(producer_id, camera_list)
 
-    def put_frame(self, session_id, camera_id, frame):
+    async def put_frame(self, session_id, camera_id, frame):
         if session_id in self.clients:
             user_id = self.clients[session_id].user_id
             if user_id in self.producers:

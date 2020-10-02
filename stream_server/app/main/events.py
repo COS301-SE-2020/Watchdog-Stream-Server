@@ -1,7 +1,10 @@
+import asyncio
 import flask
 import flask_socketio
 from . import manager
 
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
 def build(app):
     # Build Socket Server
@@ -55,11 +58,11 @@ def build(app):
         sid = flask.request.sid
         # print('producing frame ... ', sid)
         if 'camera_id' in data and 'frame' in data:
-            client_manager.put_frame(
+            asyncio.get_event_loop().run_until_complete(client_manager.put_frame(
                 sid,
                 data['camera_id'],
                 data['frame']
-            )
+            ))
         return '200'
 
     # consume-view : { producers : { producer_id : [camera_list], ... } }
