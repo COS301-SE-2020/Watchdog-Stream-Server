@@ -56,7 +56,7 @@ class Producer(ClientHandler):
                 'user_id': self.user_id,
                 'camera_list': camera_ids
             }, room=self.session_id)
-        else:
+        elif len(self.consumers) == 0:
             self.deactivate()
 
     # Send signal to producer to deactivate its broadcast
@@ -154,7 +154,7 @@ class Consumer(ClientHandler):
 
         self.producers[producer.producer_id] = producer
         self.producers[producer.producer_id].attach_consumer(self)
-        if producer.producer_id in self.requested_ids:
+        if self.get_cameras(producer.producer_id) is not None:
             for requested_id in self.requested_ids[producer.producer_id]:
                 producer.add_camera(requested_id)
 
