@@ -2,7 +2,7 @@ import random
 import time
 
 
-TIMEOUT = 30
+TIMEOUT = 12
 
 
 class ClientHandler:
