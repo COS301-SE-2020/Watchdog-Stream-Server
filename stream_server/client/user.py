@@ -3,8 +3,8 @@ import random
 import urllib3
 
 CLIENT_KEY = 'supersecure'
-# URL = 'https://stream.watchdog.thematthew.me:443/'
-URL = 'http://127.0.0.1:5555'
+URL = 'https://stream.watchdog.thematthew.me:443/'
+# URL = 'http://127.0.0.1:5555'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

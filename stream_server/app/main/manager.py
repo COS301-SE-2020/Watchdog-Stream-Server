@@ -143,8 +143,10 @@ class ClientManager(threading.Thread):
     def send_available_cameras(self, session_id, user_id):
         available_producers = {}
         if user_id in self.producers:
-            for producer_session_id, producer in self.producers[user_id].items():
-                available_producers[producer.producer_id] = producer.get_available_ids()
+            producer_session_ids = self.producers[user_id].keys()
+            for producer_session_id in producer_session_ids:
+                if producer_session_id in self.producers[user_id]:
+                    available_producers[self.producers[user_id][producer_session_id].producer_id] = self.producers[user_id][producer_session_id].get_available_ids()
 
         self.socket.emit('available-views', {
             'producers': available_producers
