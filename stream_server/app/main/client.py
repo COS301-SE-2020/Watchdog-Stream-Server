@@ -154,7 +154,7 @@ class Consumer(ClientHandler):
 
         self.producers[producer.producer_id] = producer
         self.producers[producer.producer_id].attach_consumer(self)
-        if self.get_cameras(producer.producer_id) is not None:
+        if producer.producer_id in self.requested_ids:
             for requested_id in self.requested_ids[producer.producer_id]:
                 producer.add_camera(requested_id)
 
