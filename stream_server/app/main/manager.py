@@ -103,15 +103,16 @@ class ClientManager(threading.Thread):
         if user_id not in self.consumers:
             self.consumers[user_id] = {}
 
+        producers = None
         if session_id in self.consumers[user_id]:
+            producers = self.consumers[user_id][session_id].producers.items()
             self.remove_client(session_id)
-
-        # if session_id in self.consumers[user_id]:
-        #     consumer = self.consumers[user_id][session_id]
 
         consumer = Consumer(self.socket, session_id, user_id)
 
         if consumer is not None:
+            for prod_id, prod in producers:
+                consumer.set_producer(prod)
             self.consumers[user_id][consumer.session_id] = consumer
             self.send_available_cameras(session_id, user_id)
 

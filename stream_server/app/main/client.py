@@ -50,18 +50,18 @@ class Producer(ClientHandler):
     # Send signal to producer to activate its broadcast
     def activate(self):
         camera_ids = [cam_id for cam_id in self.requested_ids if cam_id in self.available_ids]
-        if len(self.consumers) > 0 and len(camera_ids) > 0:
+        if len(camera_ids) > 0:
             self.active = True
             self.socket.emit('activate-broadcast', {
                 'user_id': self.user_id,
                 'camera_list': camera_ids
             }, room=self.session_id)
-        elif len(self.consumers) == 0:
+        else:
             self.deactivate()
 
     # Send signal to producer to deactivate its broadcast
     def deactivate(self):
-        if len(self.consumers) == 0 or len(self.requested_ids) == 0:
+        if len(self.requested_ids) == 0:
             self.active = False
             self.socket.emit('deactivate-broadcast', {
                 'user_id': self.user_id
