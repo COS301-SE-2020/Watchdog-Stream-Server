@@ -135,6 +135,8 @@ class Producer(ClientHandler):
                 sent = sent or self.consumers[client_id].consume(self.producer_id, camera_id, self.buffer)
         if not sent:
             self.requested_ids.remove(camera_id)
+            if len(self.requested_ids) == 0:
+                self.deactivate()
 
     def get_type(self):
         return 'producer'
@@ -190,8 +192,8 @@ class Consumer(ClientHandler):
 
     # Add Camera IDs to Consumer, Is checked by producers if recently come online
     def set_cameras(self, producer_id, camera_ids):
-        # if producer_id in Producer.producers:
-        #     self.set_producer(Producer.producers[producer_id])
+        if producer_id in Producer.producers and producer_id not in self.producers:
+            self.set_producer(Producer.producers[producer_id])
         self.requested_ids[producer_id] = []
         for camera_id in camera_ids:
             if camera_id not in self.requested_ids[producer_id]:

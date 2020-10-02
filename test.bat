@@ -1,8 +1,1 @@
-start python .\stream_server\client consumer USERID - PRODID1 CAM1 - PRODID2 CAMX CAMY
-start python .\stream_server\client producer USERID PRODID1 CAM1 CAM2
-start python .\stream_server\client producer USERID PRODID2 CAMX CAMY
-start python .\stream_server\client consumer USERID - PRODID2 CAMX
-start python .\stream_server\client producer USERID PRODID3 CAMV CAxY
-start python .\stream_server\client consumer USERID - PRODID2 CAxY
-start python .\stream_server\client consumer Uxxx - PRODID2 CAxY
-start python .\stream_server\client producer Uxxx PRODID2 CAMV CAxY
+start python .\stream_server\client consumer b0db8f1c-745d-4d46-9b4c-c30f2ef05637 - sfa04239559c5f374c14fea190120108359aee81ef5680e66f8f4a4ced5ce4004 ce07728ec69ec697c0512503e6a1f9090a792c7f47e4ca39e0d3974a5e6caba11 
