@@ -38,10 +38,10 @@ class Producer(ClientHandler):
         super(Producer, self).__init__(session_id, user_id, socket)
         self.producer_id = producer_id
         self.consumers = {}
-        self.active = False
-        self.available_ids = available_ids
         self.requested_ids = []
+        self.active = False
         self.buffer = None
+        self.available_ids = available_ids
         Producer.producers[self.producer_id] = self
 
     def set_available(self, available_ids):
@@ -190,8 +190,8 @@ class Consumer(ClientHandler):
 
     # Add Camera IDs to Consumer, Is checked by producers if recently come online
     def set_cameras(self, producer_id, camera_ids):
-        if producer_id in Producer.producers:
-            self.set_producer(Producer.producers[producer_id])
+        # if producer_id in Producer.producers:
+        #     self.set_producer(Producer.producers[producer_id])
         self.requested_ids[producer_id] = []
         for camera_id in camera_ids:
             if camera_id not in self.requested_ids[producer_id]:
