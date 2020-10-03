@@ -10,6 +10,8 @@ from user import Producer, Consumer
 user_type = sys.argv[1]
 user_id = sys.argv[2]
 
+time.sleep(random.randint(1, 10))
+
 print('STARTING STREAM SERVER CLIENT TESTING ENVIRONMENT')
 if user_type == 'consumer':
     producers = {}

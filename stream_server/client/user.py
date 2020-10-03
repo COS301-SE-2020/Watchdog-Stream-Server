@@ -4,7 +4,6 @@ import urllib3
 
 CLIENT_KEY = 'supersecure'
 URL = 'https://stream.watchdog.thematthew.me:443/'
-# URL = 'http://127.0.0.1:5555'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -38,7 +37,7 @@ class User:
         @self.socket.on('available-views')
         def available_views(data):
             print('\tEVENT : available views ... ', data)
-            self.set_cameras(data['producers'])
+            # self.set_cameras(data['producers'])
 
     @staticmethod
     def generate_id(user):
@@ -53,6 +52,13 @@ class Producer(User):
         self.active = False
         self.camera_list = []
         self.send_count = 0
+        print('authorize', {
+            'user_id': self.user_id,
+            'client_type': 'producer',
+            'producer_id': producer_id,
+            'available_cameras': available_cameras,
+            'client_key': CLIENT_KEY
+        })
         self.socket.emit('authorize', {
             'user_id': self.user_id,
             'client_type': 'producer',
@@ -75,6 +81,7 @@ class Producer(User):
     # Send frame through to Server
     def produce(self, camera_id, frame):
         if self.active and camera_id in self.camera_list:
+            print('produce-frame', {'camera_id': camera_id, 'frame': frame})
             self.socket.emit('produce-frame', {'camera_id': camera_id, 'frame': frame})
         self.send_count = self.send_count + 1
 
@@ -87,9 +94,11 @@ class Consumer(User):
         super(Consumer, self).__init__(user_id)
         self.buffer = None
         self.receive_count = 0
+        print('authorize', {'user_id': self.user_id, 'client_type': 'consumer', 'client_key': CLIENT_KEY})
         self.socket.emit('authorize', {'user_id': self.user_id, 'client_type': 'consumer', 'client_key': CLIENT_KEY})
 
     def set_cameras(self, producers):
+        print('consume-view', {'producers': producers})
         self.socket.emit('consume-view', {'producers': producers})
 
     # Mobile Client Consumer Draws frame data to screen

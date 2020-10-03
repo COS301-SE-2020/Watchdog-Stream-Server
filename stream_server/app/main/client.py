@@ -1,13 +1,11 @@
-import random
 import time
 
 
-TIMEOUT = 12
+TIMEOUT = 10
 
 
 class ClientHandler:
     def __init__(self, session_id, user_id, socket):
-        self.id = user_id + session_id
         self.user_id = user_id
         self.session_id = session_id
         self.socket = socket
@@ -17,18 +15,12 @@ class ClientHandler:
         self.last_seen = time.time()
 
     def is_active(self):
-        now = time.time()
-        if now - self.last_seen > TIMEOUT:
-            return False
-        return True
+        if time.time() < self.last_seen + TIMEOUT:
+            return True
+        return False
 
     def get_type(self):
         return ''
-
-    @staticmethod
-    def generate_id(client):
-        id = 'c' + str(random.getrandbits(128))
-        return id
 
 
 class Producer(ClientHandler):
@@ -37,57 +29,61 @@ class Producer(ClientHandler):
     def __init__(self, socket, session_id, user_id, producer_id, available_ids=[]):
         super(Producer, self).__init__(session_id, user_id, socket)
         self.producer_id = producer_id
+        self.available_ids = available_ids
         self.consumers = {}
         self.requested_ids = []
-        self.active = False
-        self.buffer = None
-        self.available_ids = available_ids
+        self.currently_producing = False
         Producer.producers[self.producer_id] = self
 
     def set_available(self, available_ids):
         self.available_ids = available_ids
 
+    def check_active(self):
+        if len(self.consumers) == 0 or len(self.requested_ids) == 0:
+            self.deactivate()
+        else:
+            self.activate()
+
     # Send signal to producer to activate its broadcast
     def activate(self):
         camera_ids = [cam_id for cam_id in self.requested_ids if cam_id in self.available_ids]
-        if len(camera_ids) > 0:
-            self.active = True
+        if len(camera_ids) > 0 and len(self.consumers) > 0:
+            self.currently_producing = True
             self.socket.emit('activate-broadcast', {
                 'user_id': self.user_id,
                 'camera_list': camera_ids
             }, room=self.session_id)
-        elif len(self.consumers) == 0:
+        else:
             self.deactivate()
 
     # Send signal to producer to deactivate its broadcast
     def deactivate(self):
-        if len(self.requested_ids) == 0:
-            self.active = False
+        camera_ids = [cam_id for cam_id in self.requested_ids if cam_id in self.available_ids]
+        if len(camera_ids) == 0 or len(self.consumers) == 0:
+            self.currently_producing = False
             self.socket.emit('deactivate-broadcast', {
                 'user_id': self.user_id
             }, room=self.session_id)
-        else:
+        elif len(camera_ids) > 0 and len(self.consumers) > 0:
             self.activate()
 
     # attach consumer
     def attach_consumer(self, consumer):
-        self.consumers[consumer.id] = consumer
-        if not self.consumers[consumer.id].check_producer(self.producer_id):
-            self.consumers[consumer.id].set_producer(self)
+        self.consumers[consumer.session_id] = consumer
         if consumer.requested_ids is not None:
             for camera_id in consumer.requested_ids:
                 self.add_camera(camera_id)
 
     # detach consumer
     def detach_consumer(self, consumer, clean_up=False):
-        if consumer.id in self.consumers:
+        if consumer.session_id in self.consumers:
             # Clean Up of Unnecessary Camera IDS
             if clean_up and consumer.requested_ids is not None:
                 # all ids of removed client
                 unneeded = set(consumer.requested_ids)
                 # for every other client
                 for client_id, needed_consumer in self.consumers.items():
-                    if client_id != consumer.id:
+                    if client_id != consumer.session_id:
                         # get this clients needed set of cameras
                         needed = set(needed_consumer.requested_ids)
                         # removed all the needed ids from the unneeded set
@@ -96,14 +92,13 @@ class Producer(ClientHandler):
                             break
                 needed = set(self.requested_ids)
                 self.requested_ids = list(needed - unneeded)
-            consumer = self.consumers[consumer.id]
-            del self.consumers[consumer.id]
+            consumer = self.consumers[consumer.session_id]
+            del self.consumers[consumer.session_id]
             if consumer.check_producer(self.producer_id):
-                consumer.unset_producer(self)
-        if len(self.requested_ids) == 0:
-            self.deactivate()
+                consumer.unset_producer(self, False)
+        self.activate()
 
-    # detach consumers, removing producer
+    # detach consumers, removing producer, kills producer essentially
     def detach_consumers(self):
         consumers = list(self.consumers.keys())
         for client_id in consumers:
@@ -126,15 +121,19 @@ class Producer(ClientHandler):
 
     # Accept broacasted frame
     def produce(self, camera_id, frame):
-        print('producing frame ... ', camera_id)
-        self.buffer = frame
         sent = False
         consumer_keys = self.consumers.keys()
         for client_id in consumer_keys:
             if client_id in self.consumers:
-                sent = sent or self.consumers[client_id].consume(self.producer_id, camera_id, self.buffer)
+                outcome = self.consumers[client_id].consume(self.producer_id, camera_id, frame)
+                if not outcome:
+                    if self.consumers[client_id].check_producer(self.producer_id):
+                        self.consumers[client_id].unset_producer(self)
+                    self.detach_consumer(self.consumers[client_id])
+                sent = sent or outcome
         if not sent:
-            self.requested_ids.remove(camera_id)
+            if camera_id in self.requested_ids:
+                self.requested_ids.remove(camera_id)
             if len(self.requested_ids) == 0:
                 self.deactivate()
 
@@ -149,38 +148,39 @@ class Consumer(ClientHandler):
 
     # Assign producer to consumer; Occurs when Receiving Camera List
     def set_producer(self, producer):
-        if producer.producer_id in self.producers:
-            if self.producers[producer.producer_id].check_consumer(self.id):
-                self.producers[producer.producer_id].detach_consumer(self)
-            del self.producers[producer.producer_id]
-
-        self.producers[producer.producer_id] = producer
-        self.producers[producer.producer_id].attach_consumer(self)
-        if self.get_cameras(producer.producer_id) is not None:
-            for requested_id in self.requested_ids[producer.producer_id]:
+        # Ensure it is the most recently created producer
+        producer_id = producer.producer_id
+        if producer.session_id != Producer.producers[producer_id].session_id:
+            producer = Producer.producers[producer_id]
+        # Check if somehow an old session is still attached
+        if producer_id in self.producers and self.producers[producer_id].session_id != producer.session_id:
+            if self.producers[producer_id].check_consumer(self.session_id):
+                self.producers[producer_id].detach_consumer(self)
+            del self.producers[producer_id]
+        # Attach Producer
+        self.producers[producer_id] = producer
+        self.producers[producer_id].attach_consumer(self)
+        if self.get_cameras(producer_id) is not None:
+            for requested_id in self.requested_ids[producer_id]:
                 producer.add_camera(requested_id)
 
-    def unset_producer(self, producer):
+    def unset_producer(self, producer, recur=True):
         if producer.producer_id in self.producers:
             del self.producers[producer.producer_id]
-            if producer.check_consumer(self.id):
-                producer.detach_consumer(self, True)
-            if producer.producer_id in self.requested_ids:
-                del self.requested_ids[producer.producer_id]
+            if producer.check_consumer(self.session_id) and recur:
+                producer.detach_consumer(self)
 
     def unset_producers(self):
         producers = list(self.producers.keys())
         for producer_id in producers:
             producer = self.producers[producer_id]
             del self.producers[producer_id]
-            if producer.check_consumer(self.id):
+            if producer.check_consumer(self.session_id):
                 producer.detach_consumer(self, True)
-            if producer_id in self.requested_ids:
-                del self.requested_ids[producer_id]
 
     # Check if the producer is assigned
     def check_producer(self, producer_id):
-        if producer_id in self.producers:
+        if producer_id in self.producers and self.producers[producer_id].session_id == Producer.producers[producer_id].session_id:
             return True
         return False
 
@@ -192,25 +192,34 @@ class Consumer(ClientHandler):
 
     # Add Camera IDs to Consumer, Is checked by producers if recently come online
     def set_cameras(self, producer_id, camera_ids):
-        if producer_id in Producer.producers and producer_id not in self.producers:
-            self.set_producer(Producer.producers[producer_id])
-        self.requested_ids[producer_id] = []
+        self.requested_ids[producer_id] = []  # need to clear otherwise requests will just build up
         for camera_id in camera_ids:
             if camera_id not in self.requested_ids[producer_id]:
                 self.requested_ids[producer_id].append(camera_id)
                 if producer_id in self.producers:
                     self.producers[producer_id].add_camera(camera_id)
+        producer_ids = self.requested_ids.keys()
+        for producer_id in producer_ids:
+            if not self.check_producer(producer_id):
+                if producer_id in Producer.producers:
+                    self.set_producer(Producer.producers[producer_id])
 
     # Consumes from the Producers Buffer
     def consume(self, producer_id, camera_id, frame):
-        if self.producers[producer_id] is not None and camera_id in self.requested_ids[producer_id]:
-            # emit frame bytecode to this client
+        outcome = False
+        if camera_id in self.requested_ids[producer_id]:
+            outcome = True
+            if producer_id in self.producers and self.producers[producer_id] is None:
+                if producer_id in Producer.producers:
+                    self.set_producer(Producer.producers[producer_id])
+                else:
+                    print('Warning: Producer Emitting to Client without Established Connection')
+                    outcome = False
             self.socket.emit('consume-frame', {
                 'camera_id': camera_id,
                 'frame': frame
             }, room=self.session_id)
-            return True
-        return False
+        return outcome
 
     def get_type(self):
         return 'consumer'

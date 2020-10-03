@@ -14,26 +14,47 @@ class ClientManager(threading.Thread):
         self.producers = {}
         # Consumer Objects indexed by user_id and client_id
         self.consumers = {}
-        # Map of Missing Producer IDs to Consumer Session IDs
-        self.requested = {}
 
     def run(self):
         while True:
             start = time.time()
-            self.purge_old()
+            self.purge()
             diff = time.time() - start
-            time.sleep(min(TIMEOUT, diff))
+            self.print()
+            time.sleep(TIMEOUT - diff)
 
-    def purge_old(self):
+    def purge(self):
         clients = list(self.clients.keys())
         for session_id in clients:
-            if not self.clients[session_id].is_active():
+            if self.clients[session_id] is not None and not self.clients[session_id].is_active():
                 self.remove_client(session_id)
+        for user_id in self.producers.keys():
+            for session_id, producer in self.producers[user_id].items():
+                if producer.currently_producing:
+                    producer.check_active()
+                if not producer.is_active():
+                    self.remove_client(session_id)
+        for user_id in self.consumers.keys():
+            for session_id, consumer in self.consumers[user_id].items():
+                if not consumer.is_active():
+                    self.remove_client(session_id)
 
-    def register(self, session_id):
-        if session_id in self.clients:
+    def pulse(self, session_id):
+        if session_id in self.clients and self.clients[session_id] is not None:
             self.clients[session_id].pulse()
         return session_id
+
+    # Make Provisions for a new Client Connection
+    def connected(self, session_id):
+        # If it Exists and is a Producer Remove it and its Connections
+        if session_id in self.clients and self.clients[session_id].get_type() == 'producer':
+            self.remove_client(session_id)
+        # Consumers will have new (Potentially Duplicate) Connections Created and the old ones will be cleaned up
+        self.clients[session_id] = None
+
+    # Remove Client
+    def disconnected(self, session_id):
+        self.remove_client(session_id)
 
     # authenticate a new client
     def authenticate_user(self, session_id, environ):
@@ -41,9 +62,6 @@ class ClientManager(threading.Thread):
         if 'user_id' not in environ or 'client_type' not in environ or 'client_key' not in environ:
             print('User authentication failed...')
             return client
-
-        if session_id in self.clients:
-            self.remove_client(session_id)
 
         # Connect to Dynamo DB, check the user_id and client_key is valid - Client Key's Should be generated at API
         client_key = str(environ['client_key'])
@@ -73,55 +91,49 @@ class ClientManager(threading.Thread):
 
     # add producer client
     def add_producer(self, session_id, user_id, producer_id, available_cameras):
+        # Check if Already Connected
+        if user_id in self.producers and session_id in self.producers[user_id]:
+            self.pulse(session_id)
+            self.producers[user_id][session_id].set_available(available_cameras)
+            return self.producers[user_id][session_id]
+        # Check if an Old Connection for this Producer ID is still Around
+        elif producer_id in Producer.producers:
+            print('Overriding Existing Producer Connection')
+            self.remove_client(Producer.producers[producer_id].session_id)
+
         # if this is the first producer for this user, account for it
         if user_id not in self.producers:
             self.producers[user_id] = {}
 
-        if session_id in self.producers[user_id]:
-            if self.producers[user_id][session_id].producer_id != producer_id:
-                self.remove_client(session_id)
+        self.producers[user_id][session_id] = Producer(self.socket, session_id, user_id, producer_id, available_cameras)
+        # check if any consumer might be trying to view this producer
+        if user_id in self.consumers:
+            for consumer_session_id, consumer in self.consumers[user_id].items():
+                if self.producers[user_id][session_id].producer_id in consumer.requested_ids:
+                    consumer.set_producer(self.producers[user_id][session_id])
 
-        if session_id in self.producers[user_id]:
-            producer = self.producers[user_id][session_id]
-            producer.set_available(available_cameras)
-        else:
-            producer = Producer(self.socket, session_id, user_id, producer_id, available_cameras)
-
-        if producer is not None:
-            self.producers[user_id][producer.session_id] = producer
-            # check if any consumer might be trying to view this producer
-            if producer_id in self.requested:
-                if self.requested[producer_id] in self.consumers[user_id]:
-                    consumer = self.consumers[user_id][self.requested[producer_id]]
-                    consumer.set_producer(producer)
-                    self.send_available_cameras(consumer.session_id, consumer.user_id)
-                del self.requested[producer_id]
-        return producer
+        return self.producers[user_id][session_id]
 
     # add consumer client
     def add_consumer(self, session_id, user_id):
+        if user_id in self.consumers and session_id in self.consumers[user_id]:
+            self.pulse(session_id)
+            self.send_available_cameras(session_id, user_id)
+            return self.consumers[user_id][session_id]
+
         if user_id not in self.consumers:
             self.consumers[user_id] = {}
 
-        producers = None
-        if session_id in self.consumers[user_id]:
-            producers = self.consumers[user_id][session_id].producers
-            # self.remove_client(session_id)
+        self.consumers[user_id][session_id] = Consumer(self.socket, session_id, user_id)
 
-        consumer = Consumer(self.socket, session_id, user_id)
-
-        if consumer is not None:
-            self.consumers[user_id][session_id] = consumer
-            if producers is not None:
-                for prod_id, prod in producers.items():
-                    consumer.set_producer(prod)
+        if self.consumers[user_id][session_id] is not None:
             self.send_available_cameras(session_id, user_id)
 
-        return consumer
+        return self.consumers[user_id][session_id]
 
     # removes a client and detaches its connection
     def remove_client(self, session_id):
-        if session_id in self.clients:
+        if session_id in self.clients and self.clients[session_id] is not None:
             client = self.clients[session_id]
             user_id = client.user_id
 
@@ -137,37 +149,58 @@ class ClientManager(threading.Thread):
                     self.producers[user_id][session_id].detach_consumers()
                     del self.producers[user_id][session_id]
             del self.clients[session_id]
-            print('Client disconnected...', session_id)
+        else:  # Remove any remaining references if has been overwritten
+            for user_id in self.producers.keys():
+                if session_id in self.producers[user_id]:
+                    self.producers[user_id][session_id].detach_consumers()
+                    del self.producers[user_id][session_id]
+            for user_id in self.consumers.keys():
+                if session_id in self.consumers[user_id]:
+                    self.consumers[user_id][session_id].unset_producers()
+                    del self.consumers[user_id][session_id]
+        print('Client disconnected...', session_id)
 
     # emits dictionary of producer_id : available camera list
     def send_available_cameras(self, session_id, user_id):
+        self.pulse(session_id)
         available_producers = {}
         if user_id in self.producers:
             producer_session_ids = self.producers[user_id].keys()
             for producer_session_id in producer_session_ids:
                 if producer_session_id in self.producers[user_id]:
                     available_producers[self.producers[user_id][producer_session_id].producer_id] = self.producers[user_id][producer_session_id].get_available_ids()
-
         self.socket.emit('available-views', {
             'producers': available_producers
         }, room=session_id)
 
     # sets the cameras for a given client
     def set_cameras(self, session_id, producers):
-        if session_id in self.clients:
-            client = self.clients[session_id]
-            for producer_id, camera_list in producers.items():
-                if client.get_type() == 'consumer':
+        self.pulse(session_id)
+        if session_id in self.clients and self.clients[session_id] is not None:
+            client = self.clients[session_id]  # consumer
+            if client.get_type() == 'consumer':
+                for producer_id, camera_list in producers.items():
+                    client.set_cameras(producer_id, camera_list)
                     if not client.check_producer(producer_id):
                         if producer_id in Producer.producers:
                             client.set_producer(Producer.producers[producer_id])
                         else:
                             print('Warning: Requested Producer not present!')
-                            self.requested[producer_id] = session_id
-                    client.set_cameras(producer_id, camera_list)
 
     async def put_frame(self, session_id, camera_id, frame):
-        if session_id in self.clients:
+        self.pulse(session_id)
+        if session_id in self.clients and self.clients[session_id] is not None:
             user_id = self.clients[session_id].user_id
             if user_id in self.producers:
                 self.producers[user_id][session_id].produce(camera_id, frame)
+
+    def print(self):
+        print('Clients:\n\t', self.clients.keys())
+        for user_id in self.producers.keys():
+            for session_id, producer in self.producers[user_id].items():
+                print('Producer', session_id, producer.producer_id)
+                print('\tattached cons', session_id, producer.consumers.keys())
+        for user_id in self.consumers.keys():
+            for session_id, consumer in self.consumers[user_id].items():
+                print('Consumer', session_id)
+                print('\tattached prods', session_id, consumer.producers.keys())

@@ -1,1 +1,10 @@
-start python .\stream_server\client consumer b0db8f1c-745d-4d46-9b4c-c30f2ef05637 - sfa04239559c5f374c14fea190120108359aee81ef5680e66f8f4a4ced5ce4004 ce07728ec69ec697c0512503e6a1f9090a792c7f47e4ca39e0d3974a5e6caba11 
+start python .\stream_server\client producer UID_1 PRODID_1 CAMID_1 CAMID_2 CAMID_3
+start python .\stream_server\client producer UID_1 PRODID_2 CAMID_4 CAMID_5 CAMID_6 CAMID_3
+start python .\stream_server\client consumer UID_1 - PRODID_1 CAMID_1 CAMID_2 - PRODID_2 CAMID_5 CAMID_6 CAMID_3
+start python .\stream_server\client consumer UID_2 - PRODID_X CAMID_99 CAMID_98 - PRODID_Y CAMID_E CAMID_NEVER
+start python .\stream_server\client consumer UID_2 - PRODID_X CAMID_99 CAMID_98 - PRODID_Y CAMID_E CAMID_NEVER
+start python .\stream_server\client consumer UID_2 - PRODID_X CAMID_99 CAMID_98 - PRODID_Y CAMID_E CAMID_NEVER
+start python .\stream_server\client consumer UID_2 - PRODID_X CAMID_99 CAMID_98 - PRODID_Y CAMID_E CAMID_NEVER
+start python .\stream_server\client consumer UID_2 - PRODID_X CAMID_99 CAMID_98 - PRODID_Y CAMID_E CAMID_NEVER
+start python .\stream_server\client producer UID_2 PRODID_X CAMID_99 CAMID_98 CAMID_97
+start python .\stream_server\client producer UID_2 PRODID_Y CAMID_E

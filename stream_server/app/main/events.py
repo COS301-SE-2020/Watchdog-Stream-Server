@@ -18,6 +18,7 @@ def build(app):
     def handle_connect():
         sid = flask.request.sid
         print('connecting ... ', sid)
+        client_manager.connected(sid)
 
     # disconnect
     @socket_server.on('disconnect')
@@ -25,7 +26,7 @@ def build(app):
         try:
             sid = flask.request.sid
             print('disconnecting ... ', sid)
-            client_manager.remove_client(sid)
+            client_manager.disconnected(sid)
         except Exception as error:
             print('error disconnecting ... ', sid)
             print(error)
@@ -34,13 +35,14 @@ def build(app):
     @socket_server.on_error_default
     def default_error_handler(e):
         sid = flask.request.sid
+        client_manager.disconnected(sid)
         print('error ... ', e, sid)
 
     # pulse : tells server you're still connected
     @socket_server.on('pulse')
     def handle_pulse(data):
         sid = flask.request.sid
-        client_manager.register(sid)
+        client_manager.pulse(sid)
 
     # authorize : { user_id : string, client_type : string, client_key : string }
     @socket_server.on('authorize')
@@ -56,7 +58,6 @@ def build(app):
     @socket_server.on('produce-frame')
     def handle_broadcast(data):
         sid = flask.request.sid
-        # print('producing frame ... ', sid)
         if 'camera_id' in data and 'frame' in data:
             asyncio.get_event_loop().run_until_complete(client_manager.put_frame(
                 sid,
