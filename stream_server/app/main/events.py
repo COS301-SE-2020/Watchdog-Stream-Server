@@ -35,7 +35,6 @@ def build(app):
     @socket_server.on_error_default
     def default_error_handler(e):
         sid = flask.request.sid
-        client_manager.disconnected(sid)
         print('error ... ', e, sid)
 
     # pulse : tells server you're still connected
