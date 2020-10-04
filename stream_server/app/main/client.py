@@ -34,6 +34,7 @@ class Producer(ClientHandler):
         self.requested_ids = []
         self.currently_producing = False
         Producer.producers[self.producer_id] = self
+        self.timer = time.time()
 
     def set_available(self, available_ids):
         self.available_ids = available_ids
@@ -139,6 +140,8 @@ class Producer(ClientHandler):
                 self.requested_ids.remove(camera_id)
             if len(self.requested_ids) == 0:
                 self.deactivate()
+        time.sleep(max((1 / 30) - (time.time() - self.timer), 0))
+        self.timer = time.time()
 
     def get_type(self):
         return 'producer'
