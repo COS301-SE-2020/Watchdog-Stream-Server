@@ -6,8 +6,8 @@ from . import manager
 
 Payload.max_decode_packets = 1000
 
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
+# loop = asyncio.new_event_loop()
+# asyncio.set_event_loop(loop)
 
 def build(app):
     # Build Socket Server
