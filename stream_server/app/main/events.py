@@ -40,11 +40,14 @@ def build(app):
         sid = flask.request.sid
         print('error ... ', e, sid)
 
-    # pulse : tells server you're still connected
+    # pulse : (optional) { available_cameras : boolean }
     @socket_server.on('pulse')
     def handle_pulse(data):
         sid = flask.request.sid
         client_manager.pulse(sid)
+        if 'available_cameras' in data:
+            if data['available_cameras']:
+                client_manager.send_available_cameras(sid)
 
     # authorize : { user_id : string, client_type : string, client_key : string }
     @socket_server.on('authorize')

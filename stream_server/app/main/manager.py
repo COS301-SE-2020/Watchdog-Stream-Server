@@ -20,7 +20,6 @@ class ClientManager(threading.Thread):
             start = time.time()
             self.purge()
             diff = time.time() - start
-            self.print()
             time.sleep(TIMEOUT - diff)
 
     def purge(self):
@@ -161,7 +160,12 @@ class ClientManager(threading.Thread):
         print('Client disconnected...', session_id)
 
     # emits dictionary of producer_id : available camera list
-    def send_available_cameras(self, session_id, user_id):
+    def send_available_cameras(self, session_id, user_id=None):
+        if user_id is None:
+            if session_id in self.clients and self.clients[session_id] is not None:
+                user_id = self.clients[session_id].user_id
+            else:
+                return
         self.pulse(session_id)
         available_producers = {}
         if user_id in self.producers:
@@ -188,7 +192,6 @@ class ClientManager(threading.Thread):
                             print('Warning: Requested Producer not present!')
 
     async def put_frame(self, session_id, camera_id, frame):
-        self.pulse(session_id)
         if session_id in self.clients and self.clients[session_id] is not None:
             user_id = self.clients[session_id].user_id
             if user_id in self.producers:

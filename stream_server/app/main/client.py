@@ -1,7 +1,7 @@
 import time
 
 
-TIMEOUT = 30
+TIMEOUT = 15
 
 
 class ClientHandler:
@@ -46,6 +46,7 @@ class Producer(ClientHandler):
 
     # Send signal to producer to activate its broadcast
     def activate(self):
+        self.pulse()
         camera_ids = [cam_id for cam_id in self.requested_ids if cam_id in self.available_ids]
         if len(camera_ids) > 0 and len(self.consumers) > 0:
             self.currently_producing = True
@@ -58,6 +59,7 @@ class Producer(ClientHandler):
 
     # Send signal to producer to deactivate its broadcast
     def deactivate(self):
+        self.pulse()
         camera_ids = [cam_id for cam_id in self.requested_ids if cam_id in self.available_ids]
         if len(camera_ids) == 0 or len(self.consumers) == 0:
             self.currently_producing = False
@@ -121,6 +123,7 @@ class Producer(ClientHandler):
 
     # Accept broacasted frame
     def produce(self, camera_id, frame):
+        self.pulse()
         sent = False
         consumer_keys = self.consumers.keys()
         for client_id in consumer_keys:
@@ -219,6 +222,8 @@ class Consumer(ClientHandler):
                 'camera_id': camera_id,
                 'frame': frame
             }, room=self.session_id)
+        if outcome:
+            self.pulse()
         return outcome
 
     def get_type(self):
