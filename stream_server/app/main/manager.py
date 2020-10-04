@@ -193,7 +193,7 @@ class ClientManager(threading.Thread):
                             print('Warning: Requested Producer not present!')
             self.send_available_cameras(session_id, client.user_id)
 
-    async def put_frame(self, session_id, camera_id, frame):
+    def put_frame(self, session_id, camera_id, frame):
         if session_id in self.clients and self.clients[session_id] is not None:
             user_id = self.clients[session_id].user_id
             if user_id in self.producers:

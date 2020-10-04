@@ -1,4 +1,4 @@
-import asyncio
+# import asyncio
 import flask
 import flask_socketio
 from engineio.payload import Payload
@@ -64,11 +64,16 @@ def build(app):
     def handle_broadcast(data):
         sid = flask.request.sid
         if 'camera_id' in data and 'frame' in data:
-            asyncio.get_event_loop().run_until_complete(client_manager.put_frame(
+            # asyncio.get_event_loop().run_until_complete(client_manager.put_frame(
+            #     sid,
+            #     data['camera_id'],
+            #     data['frame']
+            # ))
+            client_manager.put_frame(
                 sid,
                 data['camera_id'],
                 data['frame']
-            ))
+            )
         return '200'
 
     # consume-view : { producers : { producer_id : [camera_list], ... } }
