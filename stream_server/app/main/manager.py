@@ -110,6 +110,7 @@ class ClientManager(threading.Thread):
             for consumer_session_id, consumer in self.consumers[user_id].items():
                 if self.producers[user_id][session_id].producer_id in consumer.requested_ids:
                     consumer.set_producer(self.producers[user_id][session_id])
+                self.send_available_cameras(consumer_session_id, user_id)
 
         return self.producers[user_id][session_id]
 
@@ -190,6 +191,7 @@ class ClientManager(threading.Thread):
                             client.set_producer(Producer.producers[producer_id])
                         else:
                             print('Warning: Requested Producer not present!')
+            self.send_available_cameras(session_id, client.user_id)
 
     async def put_frame(self, session_id, camera_id, frame):
         if session_id in self.clients and self.clients[session_id] is not None:

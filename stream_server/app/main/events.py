@@ -16,6 +16,12 @@ def build(app):
     # Build Client Manager
     client_manager = manager.ClientManager(socket_server)
 
+    # handles all namespaces without an explicit error handler
+    @socket_server.on_error_default
+    def default_error_handler(e):
+        sid = flask.request.sid
+        print('error ... ', e, sid)
+
     # connect
     @socket_server.on('connect')
     def handle_connect():
@@ -33,12 +39,6 @@ def build(app):
         except Exception as error:
             print('error disconnecting ... ', sid)
             print(error)
-
-    # handles all namespaces without an explicit error handler
-    @socket_server.on_error_default
-    def default_error_handler(e):
-        sid = flask.request.sid
-        print('error ... ', e, sid)
 
     # pulse : (optional) { available_cameras : boolean }
     @socket_server.on('pulse')
