@@ -140,7 +140,7 @@ class Producer(ClientHandler):
                 self.requested_ids.remove(camera_id)
             if len(self.requested_ids) == 0:
                 self.deactivate()
-        time.sleep(max((1 / 30) - (time.time() - self.timer), 0))
+        time.sleep(max((1 / 60) - (time.time() - self.timer), 0))
         self.timer = time.time()
 
     def get_type(self):
