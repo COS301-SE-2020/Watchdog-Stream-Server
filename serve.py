@@ -6,7 +6,6 @@ eventlet.monkey_patch()
 
 server_app = app.create_app()
 
-
 def main():
     try:
         app_host = '0.0.0.0'

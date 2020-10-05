@@ -2,7 +2,7 @@ import sys
 import time
 import datetime
 import random
-from user import Producer, Consumer
+from rtc_user import Producer, Consumer
 
 # producer user_id prod_id cam_id1 cam_id2 cam_id3 cam_id4 ...
 # consumer user_id - prod_id1 cam_id1 cam_id2 - prod_id2 cam_id3 cam_id4 ...

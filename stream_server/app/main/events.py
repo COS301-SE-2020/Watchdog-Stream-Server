@@ -6,9 +6,6 @@ from . import manager
 
 Payload.max_decode_packets = 100000
 
-# loop = asyncio.new_event_loop()
-# asyncio.set_event_loop(loop)
-
 def build(app):
     # Build Socket Server
     socket_server = flask_socketio.SocketIO(app, cors_allowed_origins='*')
@@ -64,11 +61,6 @@ def build(app):
     def handle_broadcast(data):
         sid = flask.request.sid
         if 'camera_id' in data and 'frame' in data:
-            # asyncio.get_event_loop().run_until_complete(client_manager.put_frame(
-            #     sid,
-            #     data['camera_id'],
-            #     data['frame']
-            # ))
             client_manager.put_frame(
                 sid,
                 data['camera_id'],
@@ -88,3 +80,24 @@ def build(app):
 
     client_manager.start()
     return app
+
+    @socket_server.on('message')
+    def handle_message(message):
+        sid = flask.request.sid
+        socket_server.emit('message', message, room=sid)
+
+    @socket_server.on('create or join')
+    def handle_room(room):
+        sid = flask.request.sid
+        num_clients = len(flask_socketio.room(room))
+        if num_clients == 0:
+            flask_socketio.join_room(room)
+            socket_server.emit('created', room, room=sid)
+        elif num_clients <= 10:
+            socket_server.emit('join', room, room=room)
+            flask_socketio.join_room(room)
+            socket_server.emit('joined', room, room=sid)
+        else:
+            socket_server.emit('full', room, room=sid)
+        socket_server.emit('emit(): client ' + sid + ' joined room ' + room, room=sid)
+        socket_server.emit('broadcast(): client ' + sid + ' joined room ' + room)

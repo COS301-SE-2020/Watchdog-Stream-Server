@@ -1,20 +1,37 @@
 import socketio
-import random
+import logging
 import urllib3
+import uuid
+from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
+# from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
 
 CLIENT_KEY = 'supersecure'
-# URL = 'https://stream.watchdog.thematthew.me:443/'
 URL = 'http://127.0.0.1:5555'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+logger = logging.getLogger("pc")
+
+
+class VideoTransformTrack(MediaStreamTrack):
+    kind = "video"
+
+    def __init__(self, track):
+        super().__init__()  # don't forget this!
+        self.track = track
+
+    async def recv(self):
+        # frame = await self.track.recv()
+        frame = 'wwwwwwwww'
+        return frame
+
 
 # Front-End Client Asbtract Class
 class User:
     def __init__(self, user_id):
-        self.id = self.generate_id(self)
         self.user_id = user_id
         self.socket = socketio.Client(ssl_verify=False)
         self.socket.connect(URL)
+        self.pcs = set()
 
         # Data : { user_id : string, camera_list : string }
         @self.socket.on('activate-broadcast')
@@ -40,10 +57,35 @@ class User:
             print('\tEVENT : available views ... ', data)
             # self.set_cameras(data['producers'])
 
-    @staticmethod
-    def generate_id(user):
-        id = 'u' + str(random.getrandbits(128))
-        return id
+        @self.socket.on('rtc-connect')
+        def connect_offer(data):
+            print('\tEVENT : rtc-connect ... ', data)
+            self.offer(data)
+
+    async def offer(self, request):
+        print(request)
+        params = await request.json()
+        offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
+
+        pc = RTCPeerConnection()
+        self.pcs.add(pc)
+
+        @pc.on("iceconnectionstatechange")
+        async def on_iceconnectionstatechange():
+            print("ICE connection state is %s" % pc.iceConnectionState)
+            if pc.iceConnectionState == "failed":
+                await pc.close()
+                self.pcs.discard(pc)
+
+        player = VideoTransformTrack("/dev/video0")
+
+        await pc.setRemoteDescription(offer)
+        for t in pc.getTransceivers():
+            if t.kind == "video":
+                pc.addTrack(player)
+
+        answer = await pc.createAnswer()
+        await pc.setLocalDescription(answer)
 
 
 # Front-End Producer Client
@@ -88,6 +130,7 @@ class Producer(User):
 
     def get_list(self):
         return self.camera_list
+
 
 # Front-End Consumer Client
 class Consumer(User):
