@@ -21,3 +21,4 @@ stream_server.egg-info
 *.csr
 *.key
 *.pem
+venv
