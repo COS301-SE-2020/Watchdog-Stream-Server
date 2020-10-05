@@ -22,3 +22,4 @@ stream_server.egg-info
 *.key
 *.pem
 venv
+stream-server-client/node_modules
