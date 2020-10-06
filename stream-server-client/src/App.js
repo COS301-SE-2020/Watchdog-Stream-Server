@@ -65,7 +65,7 @@ function App(props) {
     <Col>
       <p>Name : {cameraObject.name}</p>
       <p>Location: {cameraObject.location}</p>
-      <img
+      <video
         style={{
           border: '3px solid',
           borderColor: (props.serverStatus) && (props.producers[cameraObject.site]) && (props.producers[cameraObject.site].find(element => element == cameraObject.id)) ? 'green' : 'red',

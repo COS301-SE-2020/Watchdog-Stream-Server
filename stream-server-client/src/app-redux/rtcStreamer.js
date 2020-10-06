@@ -73,13 +73,13 @@ var SocketManager = (function () {
             pc[data.camera_id].setRemoteDescription(answer);
         });
 
-        socket.on("consume-frame", (message) => {
-            dispatch({
-                type: "CONSUME_FRAME",
-                camera_id: message.camera_id,
-                frame: message.streams[0]
-            })
-        })
+        // socket.on("consume-frame", (message) => {
+        //     dispatch({
+        //         type: "CONSUME_FRAME",
+        //         camera_id: message.camera_id,
+        //         frame: message.streams[0]
+        //     })
+        // })
 
         setInterval(() => {
             socket.emit('pulse', { 'available_cameras': true })
@@ -113,7 +113,13 @@ var SocketManager = (function () {
                 {
                     pc[camera_id] = new RTCPeerConnection(config);
                     pc[camera_id].addEventListener('track', function(evt) {
+                        let camera_id = camera_id
                         console.log(evt.streams[0])
+                        dispatch({
+                            type: "CONSUME_FRAME",
+                            camera_id: camera_id,
+                            frame: evt.streams[0]
+                        })
                     });                
                 }
                 return negotiate(pc[camera_id], socket, camera_id);
