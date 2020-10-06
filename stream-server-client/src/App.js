@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, VideoHTMLAttributes } from 'react';
 import logo from './logo.svg';
 import static_image from './static.gif';
 import { Container, Row, Col } from 'react-grid-system';
 import { connect } from 'react-redux';
 import SocketManager from './app-redux/rtcStreamer';
 import './App.css';
-import Highlight from 'react-highlight.js';
 
 import { tuneIntoFeed, authenticate } from './app-redux/rtcStreamer';
 import { getControlPanel, getUserData } from './app-redux/actions';
@@ -71,7 +70,7 @@ function App(props) {
           borderColor: (props.serverStatus) && (props.producers[cameraObject.site]) && (props.producers[cameraObject.site].find(element => element == cameraObject.id)) ? 'green' : 'red',
           margin: 5
         }}
-        src={(props.camera_frames[cameraObject.id]) ? props.camera_frames[cameraObject.id] : static_image}
+        srcObject={(props.camera_frames[cameraObject.id]) ? props.camera_frames[cameraObject.id] : static_image}
       />
       <p>{props.camera_frames[cameraObject.id]}</p>
     </Col>

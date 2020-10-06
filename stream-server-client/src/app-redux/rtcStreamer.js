@@ -112,12 +112,12 @@ var SocketManager = (function () {
                 if (!pc[camera_id])
                 {
                     pc[camera_id] = new RTCPeerConnection(config);
+                    pc[camera_id][camera_id] = camera_id;
                     pc[camera_id].addEventListener('track', function(evt) {
-                        let camera_id = camera_id
-                        console.log(evt.streams[0])
+                        console.log(evt)
                         dispatch({
                             type: "CONSUME_FRAME",
-                            camera_id: camera_id,
+                            camera_id: evt.camera_id,
                             frame: evt.streams[0]
                         })
                     });                
