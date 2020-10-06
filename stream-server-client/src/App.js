@@ -3,11 +3,11 @@ import logo from './logo.svg';
 import static_image from './static.gif';
 import { Container, Row, Col } from 'react-grid-system';
 import { connect } from 'react-redux';
-import SocketManager from './app-redux/socketManager';
+import SocketManager from './app-redux/rtcStreamer';
 import './App.css';
 import Highlight from 'react-highlight.js';
 
-import { tuneIntoFeed, authenticate } from './app-redux/socketManager';
+import { tuneIntoFeed, authenticate } from './app-redux/rtcStreamer';
 import { getControlPanel, getUserData } from './app-redux/actions';
 import Amplify from 'aws-amplify';
 import { Auth } from 'aws-amplify';
