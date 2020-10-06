@@ -116,7 +116,7 @@ var SocketManager = (function () {
             Promise.all(promises).then((values) => {
                 console.log(values);
                 let connections = {}
-                values.forEach((camera_id, i) => {
+                camera_list.forEach((camera_id, i) => {
                     connections[camera_id] = {
                         sdp: values[i].localDescription.sdp,
                         type: values[i].localDescription.type
