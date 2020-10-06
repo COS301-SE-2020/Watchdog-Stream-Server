@@ -70,7 +70,9 @@ function App(props) {
           borderColor: (props.serverStatus) && (props.producers[cameraObject.site]) && (props.producers[cameraObject.site].find(element => element == cameraObject.id)) ? 'green' : 'red',
           margin: 5
         }}
-        srcObject={(props.camera_frames[cameraObject.id]) ? props.camera_frames[cameraObject.id] : static_image}
+        ref={(video) => {video = props.camera_frames[cameraObject.id]}}
+        // controls
+        autoPlay
       />
       <p>{props.camera_frames[cameraObject.id]}</p>
     </Col>
