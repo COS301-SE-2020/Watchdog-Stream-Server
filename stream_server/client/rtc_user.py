@@ -1,7 +1,6 @@
 import socketio
 import logging
 import urllib3
-import uuid
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 # from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
 
@@ -9,20 +8,18 @@ CLIENT_KEY = 'supersecure'
 URL = 'http://127.0.0.1:5555'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-logger = logging.getLogger("pc")
+logger = logging.getLogger('pc')
 
 
 class VideoTransformTrack(MediaStreamTrack):
-    kind = "video"
+    kind = 'video'
 
-    def __init__(self, track):
+    def __init__(self):
         super().__init__()  # don't forget this!
-        self.track = track
+        self.frame = 'no-frame'
 
     async def recv(self):
-        # frame = await self.track.recv()
-        frame = 'wwwwwwwww'
-        return frame
+        return self.frame
 
 
 # Front-End Client Asbtract Class
@@ -60,32 +57,14 @@ class User:
         @self.socket.on('rtc-connect')
         def connect_offer(data):
             print('\tEVENT : rtc-connect ... ', data)
-            self.offer(data)
+            if self.get_type() == 'producer':
+                self.offer(data)
 
-    async def offer(self, request):
-        print(request)
-        params = await request.json()
-        offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-
-        pc = RTCPeerConnection()
-        self.pcs.add(pc)
-
-        @pc.on("iceconnectionstatechange")
-        async def on_iceconnectionstatechange():
-            print("ICE connection state is %s" % pc.iceConnectionState)
-            if pc.iceConnectionState == "failed":
-                await pc.close()
-                self.pcs.discard(pc)
-
-        player = VideoTransformTrack("/dev/video0")
-
-        await pc.setRemoteDescription(offer)
-        for t in pc.getTransceivers():
-            if t.kind == "video":
-                pc.addTrack(player)
-
-        answer = await pc.createAnswer()
-        await pc.setLocalDescription(answer)
+        @self.socket.on('connected-rtc')
+        def connected_rtc(data):
+            print('\tEVENT : connected-rtc ... ', data)
+            if self.get_type() == 'consumer':
+                self.ask(data)
 
 
 # Front-End Producer Client
@@ -95,20 +74,16 @@ class Producer(User):
         self.active = False
         self.camera_list = []
         self.send_count = 0
-        print('authorize', {
-            'user_id': self.user_id,
-            'client_type': 'producer',
-            'producer_id': producer_id,
-            'available_cameras': available_cameras,
-            'client_key': CLIENT_KEY
-        })
+        self.producer_id = producer_id
         self.socket.emit('authorize', {
             'user_id': self.user_id,
             'client_type': 'producer',
-            'producer_id': producer_id,
+            'producer_id': self.producer_id,
             'available_cameras': available_cameras,
             'client_key': CLIENT_KEY
         })
+
+        self.player = VideoTransformTrack()
 
     # Start HCP Client Producer
     def activate(self, camera_list):
@@ -124,13 +99,47 @@ class Producer(User):
     # Send frame through to Server
     def produce(self, camera_id, frame):
         if self.active and camera_id in self.camera_list:
-            print('produce-frame', {'camera_id': camera_id, 'frame': frame})
-            self.socket.emit('produce-frame', {'camera_id': camera_id, 'frame': frame})
+            self.player.frame = frame
         self.send_count = self.send_count + 1
 
     def get_list(self):
         return self.camera_list
 
+    async def offer(self, request):
+        print(request)
+        camera_id = request['camera_id']
+        peer_session_id = request['peer_session_id']
+        offer = RTCSessionDescription(sdp=request['sdp'], type=request['type'])
+
+        pc = RTCPeerConnection()
+        # self.pcs.add(pc)
+        self.pcs[camera_id] = pc
+
+        @pc.on('iceconnectionstatechange')
+        async def on_iceconnectionstatechange():
+            print('ICE connection state is %s' % pc.iceConnectionState)
+            if pc.iceConnectionState == 'failed':
+                await pc.close()
+                # self.pcs.discard(pc)
+                del self.pcs[camera_id]
+
+        await pc.setRemoteDescription(offer)
+        for t in pc.getTransceivers():
+            if t.kind == 'video':
+                pc.addTrack(self.player)
+
+        answer = await pc.createAnswer()
+        await pc.setLocalDescription(answer)
+
+        self.socket.emit('produce-rtc', {
+            'requested_session': peer_session_id,
+            'camera_id': camera_id,
+            'sdp': pc.localDescription.sdp,
+            'type': pc.localDescription.type
+        })
+
+    def get_type(self):
+        return 'producer'
 
 # Front-End Consumer Client
 class Consumer(User):
@@ -150,3 +159,26 @@ class Consumer(User):
         self.buffer = data
         print(self.buffer)
         self.receive_count = self.receive_count + 1
+
+    # async def ask(self, request):
+        # camera_id = request['camera_id']
+
+        # config = {'sdpSemantics': 'unified-plan'}
+        # config.iceServers = [{'urls': ['stun:stun.l.google.com:19302']}]
+
+        # pc = RTCPeerConnection(config)
+        # # self.pcs.add(pc)
+        # self.pcs[camera_id] = pc
+
+        # @pc.on('track')
+        # async def on_track(evt):
+        #     print(evt)
+
+        # pc.addTransceiver('video', {'direction': 'recvonly'})
+        # offer = pc.createOffer()
+        # pc.setLocalDescription(offer)
+
+        # self.socket.emit('consume-rtc', {'connections': connections})
+
+    def get_type(self):
+        return 'consumer'

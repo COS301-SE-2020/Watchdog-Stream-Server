@@ -1,7 +1,7 @@
 import time
 
 
-TIMEOUT = 15
+TIMEOUT = 60
 
 
 class ClientHandler:
@@ -145,6 +145,7 @@ class Producer(ClientHandler):
 
     def get_type(self):
         return 'producer'
+
 
 class Consumer(ClientHandler):
     def __init__(self, socket, session_id, user_id):

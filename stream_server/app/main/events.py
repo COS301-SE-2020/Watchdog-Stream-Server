@@ -78,26 +78,45 @@ def build(app):
                 return '202'
         return '204'
 
+    # { connections : { camera_id : { sdp : sdp, type : type } }, ... } }
+    @socket_server.on('consume-rtc')
+    def handle_rtc_consume(data):
+        sid = flask.request.sid
+        print('consume-rtc ... ', data)
+        # sends sdp & type to each specified producer
+        cameras = data['connections']
+        for camera_id, info in cameras.items():
+            client_manager.connect_camera(sid, camera_id, info['sdp'], info['type'])
+        # producer will initiate RTC Peer
+        # producer will then send produce-rtc, with relevant info to be sent back to client for
+
+    # { requested_session : peer_session_id, camera_id : camera_id, sdp : sdp, type : type }
+    @socket_server.on('produce-rtc')
+    def handle_rtc_produce(data):
+        print('produce-rtc ... ', data)
+        # will send sdp and type back as answer for consumer to finish establishing a connection
+        socket_server.emit('connected-rtc', {'camera_id': data['camera_id'], 'sdp': data['sdp'], 'type': data['type']}, room=data['requested_session'])
+
     client_manager.start()
     return app
 
-    @socket_server.on('message')
-    def handle_message(message):
-        sid = flask.request.sid
-        socket_server.emit('message', message, room=sid)
+    # @socket_server.on('message')
+    # def handle_message(message):
+    #     sid = flask.request.sid
+    #     socket_server.emit('message', message, room=sid)
 
-    @socket_server.on('create or join')
-    def handle_room(room):
-        sid = flask.request.sid
-        num_clients = len(flask_socketio.room(room))
-        if num_clients == 0:
-            flask_socketio.join_room(room)
-            socket_server.emit('created', room, room=sid)
-        elif num_clients <= 10:
-            socket_server.emit('join', room, room=room)
-            flask_socketio.join_room(room)
-            socket_server.emit('joined', room, room=sid)
-        else:
-            socket_server.emit('full', room, room=sid)
-        socket_server.emit('emit(): client ' + sid + ' joined room ' + room, room=sid)
-        socket_server.emit('broadcast(): client ' + sid + ' joined room ' + room)
+    # @socket_server.on('create or join')
+    # def handle_room(room):
+    #     sid = flask.request.sid
+    #     num_clients = len(flask_socketio.room(room))
+    #     if num_clients == 0:
+    #         flask_socketio.join_room(room)
+    #         socket_server.emit('created', room, room=sid)
+    #     elif num_clients <= 10:
+    #         socket_server.emit('join', room, room=room)
+    #         flask_socketio.join_room(room)
+    #         socket_server.emit('joined', room, room=sid)
+    #     else:
+    #         socket_server.emit('full', room, room=sid)
+    #     socket_server.emit('emit(): client ' + sid + ' joined room ' + room, room=sid)
+    #     socket_server.emit('broadcast(): client ' + sid + ' joined room ' + room)

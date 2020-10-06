@@ -193,6 +193,19 @@ class ClientManager(threading.Thread):
                             print('Warning: Requested Producer not present!')
             self.send_available_cameras(session_id, client.user_id)
 
+    # sends sdp & type to each specified producer
+    def connect_camera(self, session_id, camera_id, rtc_sdp, rtc_type):
+        if session_id in self.clients and self.clients[session_id] is not None:
+            user_id = self.clients[session_id].user_id
+            for producer_session_id, producer in self.producers[user_id].items():
+                if camera_id in producer.available_ids:
+                    self.socket.emit('rtc-connect', {
+                        'sdp': rtc_sdp,
+                        'type': rtc_type,
+                        'camera_id': camera_id,
+                        'peer_session_id': session_id
+                    }, room=session_id)
+
     def put_frame(self, session_id, camera_id, frame):
         if session_id in self.clients and self.clients[session_id] is not None:
             user_id = self.clients[session_id].user_id
