@@ -4,6 +4,7 @@ import urllib3
 import asyncio
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 # from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
+from aiortc.contrib.media import MediaPlayer
 
 CLIENT_KEY = 'supersecure'
 URL = 'http://127.0.0.1:5555'
@@ -90,7 +91,9 @@ class Producer(User):
             'client_key': CLIENT_KEY
         })
 
-        self.player = VideoTransformTrack()
+        # self.player = VideoTransformTrack()
+        options = {"framerate": "30", "video_size": "640x480"}
+        self.player = MediaPlayer("/dev/video0", format="v4l2", options=options)
 
     # Start HCP Client Producer
     def activate(self, camera_list):
