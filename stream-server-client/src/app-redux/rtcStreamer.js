@@ -118,8 +118,8 @@ var SocketManager = (function () {
                 let connections = {}
                 camera_list.forEach((camera_id, i) => {
                     connections[camera_id] = {
-                        sdp: values[i].localDescription.sdp,
-                        type: values[i].localDescription.type
+                        sdp: pc[camera_id].localDescription.sdp,
+                        type: pc[camera_id].localDescription.type
                     }
                 });
                 socket.emit('consume-rtc', {
