@@ -60,7 +60,6 @@ function App(props) {
   const [password, setPassword] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
 
-
   const renderCamera = (cameraObject, image, props) => {
     return <Col>
       <p>Name : {cameraObject.name}</p>
@@ -72,9 +71,13 @@ function App(props) {
           margin: 5
         }}
         ref={(video) => {
+          console.log('Camera '+cameraObject.id+" updating...");
+          console.log(global[cameraObject.id+"_stream"]);
           if (video) {
             video.autoplay = true;
-            video.srcObject = props.camera_frames[cameraObject.id];
+            video.controls = true;
+            video.playsinline = true;
+            video.srcObject = global[cameraObject.id+"_stream"];
           }
         }}
       />
@@ -152,7 +155,10 @@ const mapStoreToProps = (store) => ({
 })
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  login: () => dispatch(getUserData()),
+  login: () => {
+    dispatch(getUserData())
+    dispatch(getControlPanel())
+  },
   fetch: () => {
     dispatch(getControlPanel())
   },

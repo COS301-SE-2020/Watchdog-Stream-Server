@@ -1,6 +1,7 @@
 import socketIO from 'socket.io-client'
 import { LIVE_SERVER_URL } from './constants'
 import store from './store'
+import moment from 'moment'
 
 
 const socket = socketIO(LIVE_SERVER_URL, {
@@ -66,10 +67,12 @@ var SocketManager = (function () {
 
         //TODO: add event name
         socket.on('connected-rtc', (data) => {
+            console.log('Connected-rtc');
             let answer = {
                 type: data.type,
                 sdp: data.sdp
             }
+            console.log(moment.now().toString());
             pc[data.camera_id].setRemoteDescription(answer);
         });
 
@@ -82,7 +85,7 @@ var SocketManager = (function () {
         // })
 
         setInterval(() => {
-            socket.emit('pulse', { 'available_cameras': true })
+            socket.emit('pulse', {})
         }, 5)
     })
 
@@ -112,13 +115,15 @@ var SocketManager = (function () {
                 if (!pc[camera_id])
                 {
                     pc[camera_id] = new RTCPeerConnection(config);
-                    pc[camera_id][camera_id] = camera_id;
+                    pc[camera_id]["camera_id"] = camera_id;
                     pc[camera_id].addEventListener('track', function(evt) {
-                        console.log(evt)
+                        console.log(evt);
+                        global[camera_id+"_stream"] = evt.streams[0];
+                        console.log(moment.now().toString());
                         dispatch({
                             type: "CONSUME_FRAME",
-                            camera_id: evt.camera_id,
-                            frame: evt.streams[0]
+                            camera_id: evt.currentTarget["camera_id"],
+                            // frame: evt.streams[0]
                         })
                     });                
                 }
@@ -134,6 +139,7 @@ var SocketManager = (function () {
                         type: pc[camera_id].localDescription.type
                     }
                 });
+                console.log(moment.now().toString());
                 socket.emit('consume-rtc', {
                     connections
                 })

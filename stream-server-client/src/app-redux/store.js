@@ -21,9 +21,9 @@ const logger = createLogger({})
 //     composeEnhancers = global.window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
 // }
 let composeEnhancers = compose;
-// if (typeof window !== "undefined") {
-//     composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__;
-// }
+if (typeof window !== "undefined") {
+    composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__;
+}
 
 const store = createStore(
     watchdogApp,
