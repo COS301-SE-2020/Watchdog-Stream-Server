@@ -110,7 +110,12 @@ var SocketManager = (function () {
             console.log(camera_list);
             let promises = camera_list.map(camera_id => {
                 if (!pc[camera_id])
+                {
                     pc[camera_id] = new RTCPeerConnection(config);
+                    pc[camera_id].addEventListener('track', function(evt) {
+                        console.log(evt.streams[0])
+                    });                
+                }
                 return negotiate(pc[camera_id], socket, camera_id);
             });
 

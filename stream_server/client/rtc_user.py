@@ -1,11 +1,13 @@
 import socketio
 import logging
 import urllib3
+import asyncio
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 # from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
 
 CLIENT_KEY = 'supersecure'
 URL = 'http://127.0.0.1:5555'
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 logger = logging.getLogger('pc')
@@ -17,6 +19,8 @@ class VideoTransformTrack(MediaStreamTrack):
     def __init__(self):
         super().__init__()  # don't forget this!
         self.frame = 'no-frame'
+        with open('206379419296196619.jpg', 'rb') as file:
+            self.frame = file
 
     async def recv(self):
         return self.frame
@@ -28,7 +32,7 @@ class User:
         self.user_id = user_id
         self.socket = socketio.Client(ssl_verify=False)
         self.socket.connect(URL)
-        self.pcs = set()
+        self.pcs = {}
 
         # Data : { user_id : string, camera_list : string }
         @self.socket.on('activate-broadcast')
@@ -54,11 +58,14 @@ class User:
             print('\tEVENT : available views ... ', data)
             # self.set_cameras(data['producers'])
 
-        @self.socket.on('rtc-connect')
+        @self.socket.on('connect-rtc')
         def connect_offer(data):
-            print('\tEVENT : rtc-connect ... ', data)
+            print('\tEVENT : connect-rtc ... ', data)
             if self.get_type() == 'producer':
-                self.offer(data)
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(self.offer(data['connection']))
+                # self.offer(data['connection'])
 
         @self.socket.on('connected-rtc')
         def connected_rtc(data):
@@ -106,6 +113,7 @@ class Producer(User):
         return self.camera_list
 
     async def offer(self, request):
+        print('OFFER')
         print(request)
         camera_id = request['camera_id']
         peer_session_id = request['peer_session_id']
