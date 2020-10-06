@@ -64,18 +64,18 @@ function App(props) {
   const renderCamera = (cameraObject, image, props) => {
     let vid = HTMLMediaElement();
     vid.srcObject = props.camera_frames[cameraObject.id];
+    vid.autoPlay = true
+    vid.playsInline = true
     return <Col>
       <p>Name : {cameraObject.name}</p>
       <p>Location: {cameraObject.location}</p>
-      <video
+      <video 
         style={{
           border: '3px solid',
           borderColor: (props.serverStatus) && (props.producers[cameraObject.site]) && (props.producers[cameraObject.site].find(element => element == cameraObject.id)) ? 'green' : 'red',
           margin: 5
         }}
         ref={(video) => {video = vid}}
-        // controls
-        autoPlay
       />
       <p>{props.camera_frames[cameraObject.id]}</p>
     </Col>

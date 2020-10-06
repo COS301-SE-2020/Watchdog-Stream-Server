@@ -3,7 +3,6 @@ import logging
 import urllib3
 import asyncio
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
-# from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
 from aiortc.contrib.media import MediaPlayer
 
 CLIENT_KEY = 'supersecure'
@@ -66,7 +65,6 @@ class User:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 loop.run_until_complete(self.offer(data['connection']))
-                # self.offer(data['connection'])
 
         @self.socket.on('connected-rtc')
         def connected_rtc(data):
@@ -92,8 +90,7 @@ class Producer(User):
         })
 
         # self.player = VideoTransformTrack()
-        options = {"framerate": "30", "video_size": "640x480"}
-        self.player = MediaPlayer("/dev/video0", format="v4l2", options=options)
+        self.player = MediaPlayer("rtsp://10.0.0.109:8080/h264_ulaw.sdp", options={"framerate": "30", "video_size": "640x480"})
 
     # Start HCP Client Producer
     def activate(self, camera_list):
@@ -108,8 +105,8 @@ class Producer(User):
 
     # Send frame through to Server
     def produce(self, camera_id, frame):
-        if self.active and camera_id in self.camera_list:
-            self.player.frame = frame
+        # if self.active and camera_id in self.camera_list:
+        #     self.player.frame = frame
         self.send_count = self.send_count + 1
 
     def get_list(self):
@@ -123,7 +120,6 @@ class Producer(User):
         offer = RTCSessionDescription(sdp=request['sdp'], type=request['type'])
 
         pc = RTCPeerConnection()
-        # self.pcs.add(pc)
         self.pcs[camera_id] = pc
 
         @pc.on('iceconnectionstatechange')
@@ -131,13 +127,12 @@ class Producer(User):
             print('ICE connection state is %s' % pc.iceConnectionState)
             if pc.iceConnectionState == 'failed':
                 await pc.close()
-                # self.pcs.discard(pc)
                 del self.pcs[camera_id]
 
         await pc.setRemoteDescription(offer)
         for t in pc.getTransceivers():
             if t.kind == 'video':
-                pc.addTrack(self.player)
+                pc.addTrack(self.player.video)
 
         answer = await pc.createAnswer()
         await pc.setLocalDescription(answer)
