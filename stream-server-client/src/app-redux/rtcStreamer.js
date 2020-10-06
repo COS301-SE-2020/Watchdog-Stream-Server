@@ -1,7 +1,5 @@
-import { PureComponent } from 'react'
 import socketIO from 'socket.io-client'
 import { LIVE_SERVER_URL } from './constants'
-
 import store from './store'
 
 
@@ -115,11 +113,11 @@ var SocketManager = (function () {
             });
 
             Promise.all(promises).then(values => {
-                connections = {}
+                let connections = {}
                 values.forEach((camera_id, i) => {
                     connections[camera_id] = {
-                        sdp: offer.sdp,
-                        type: offer.type
+                        sdp: values[i].sdp,
+                        type: values[i].type
                     }
                 });
                 socket.emit('consume-rtc', {

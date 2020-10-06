@@ -5,7 +5,7 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import store from './app-redux/store'
 import {Provider} from 'react-redux';
-import SocketManager from './app-redux/socketManager';
+import SocketManager from './app-redux/rtcStreamer';
 
 SocketManager.init(store.dispatch)
 
