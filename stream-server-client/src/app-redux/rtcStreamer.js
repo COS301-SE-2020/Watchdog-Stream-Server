@@ -50,6 +50,7 @@ var SocketManager = (function () {
             dispatch({
                 type: 'LIVE_DISCONNECTED'
             })
+            pc = {}
         })
 
         socket.on('available-views',
