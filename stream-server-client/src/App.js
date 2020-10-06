@@ -1,4 +1,4 @@
-import React, { useEffect, useState, VideoHTMLAttributes } from 'react';
+import React, { useEffect, useState, MediaHTMLAttributes } from 'react';
 import logo from './logo.svg';
 import static_image from './static.gif';
 import { Container, Row, Col } from 'react-grid-system';
@@ -60,8 +60,11 @@ function App(props) {
   const [password, setPassword] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
 
-  const renderCamera = (cameraObject, image, props) => (
-    <Col>
+
+  const renderCamera = (cameraObject, image, props) => {
+    let vid = HTMLMediaElement();
+    vid.srcObject = props.camera_frames[cameraObject.id];
+    return <Col>
       <p>Name : {cameraObject.name}</p>
       <p>Location: {cameraObject.location}</p>
       <video
@@ -70,13 +73,13 @@ function App(props) {
           borderColor: (props.serverStatus) && (props.producers[cameraObject.site]) && (props.producers[cameraObject.site].find(element => element == cameraObject.id)) ? 'green' : 'red',
           margin: 5
         }}
-        ref={(video) => {video = props.camera_frames[cameraObject.id]}}
+        ref={(video) => {video = vid}}
         // controls
         autoPlay
       />
       <p>{props.camera_frames[cameraObject.id]}</p>
     </Col>
-  )
+  }
 
   return (
     <div className="App">
