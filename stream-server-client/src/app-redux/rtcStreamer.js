@@ -156,7 +156,7 @@ var SocketManager = (function () {
                         sdp: pc[camera_id].localDescription.sdp,
                         type: pc[camera_id].localDescription.type
                     }
-                    fetch('/offer', {
+                    fetch('http://127.0.0.1:5555/offer', {
                         body: JSON.stringify({
                             camera_id: camera_id,
                             sdp: pc[camera_id].localDescription.sdp,
