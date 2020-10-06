@@ -29,6 +29,25 @@ function negotiate(pc, socket, camera_id) {
             }
         });
     })
+    // .then(() => {
+    //     var offer = pc.localDescription;
+    //     return fetch('/offer', {
+    //         body: JSON.stringify({
+    //             sdp: offer.sdp,
+    //             type: offer.type,
+    //         }),
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         method: 'POST'
+    //     });
+    // }).then(function(response) {
+    //     return response.json();
+    // }).then(function(answer) {
+    //     return pc.setRemoteDescription(answer);
+    // }).catch(function(e) {
+    //     alert(e);
+    // });
 }
 
 var SocketManager = (function () {
@@ -112,20 +131,19 @@ var SocketManager = (function () {
         tuneInToFeed: function (camera_list, site_id, producers) {
             console.log(camera_list);
             let promises = camera_list.map(camera_id => {
-                if (!pc[camera_id])
-                {
+                if (!pc[camera_id]) {
                     pc[camera_id] = new RTCPeerConnection(config);
                     pc[camera_id]["camera_id"] = camera_id;
-                    pc[camera_id].addEventListener('track', function(evt) {
+                    pc[camera_id].addEventListener('track', function (evt) {
                         console.log(evt);
-                        global[camera_id+"_stream"] = evt.streams[0];
+                        global[camera_id + "_stream"] = evt.streams[0];
                         console.log(moment.now().toString());
                         dispatch({
                             type: "CONSUME_FRAME",
                             camera_id: evt.currentTarget["camera_id"],
                             // frame: evt.streams[0]
                         })
-                    });                
+                    });
                 }
                 return negotiate(pc[camera_id], socket, camera_id);
             });
@@ -138,11 +156,31 @@ var SocketManager = (function () {
                         sdp: pc[camera_id].localDescription.sdp,
                         type: pc[camera_id].localDescription.type
                     }
+                    fetch('/offer', {
+                        body: JSON.stringify({
+                            camera_id: camera_id,
+                            sdp: pc[camera_id].localDescription.sdp,
+                            type: pc[camera_id].localDescription.type
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        method: 'POST'
+                    }).then((response) => {
+                        return response.json();
+                    }).then((data) => {
+                        let answer = {
+                            type: data.type,
+                            sdp: data.sdp
+                        }
+                        return pc[data.camera_id].setRemoteDescription(answer)
+                    })
                 });
-                console.log(moment.now().toString());
-                socket.emit('consume-rtc', {
-                    connections
-                })
+                // console.log(moment.now().toString());
+                // socket.emit('consume-rtc', {
+                //     connections
+                // })
+
             })
         }
     };
