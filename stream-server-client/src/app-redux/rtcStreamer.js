@@ -21,7 +21,7 @@ function negotiate(pc, socket, camera_id) {
                 function checkState() {
                     if (pc.iceGatheringState === 'complete') {
                         pc.removeEventListener('icegatheringstatechange', checkState);
-                        resolve();
+                        resolve(pc);
                     }
                 }
                 pc.addEventListener('icegatheringstatechange', checkState);
@@ -106,18 +106,20 @@ var SocketManager = (function () {
             })
         },
         tuneInToFeed: function (camera_list, site_id, producers) {
+            console.log(camera_list);
             let promises = camera_list.map(camera_id => {
                 if (!pc[camera_id])
                     pc[camera_id] = new RTCPeerConnection(config);
                 return negotiate(pc[camera_id], socket, camera_id);
             });
 
-            Promise.all(promises).then(values => {
+            Promise.all(promises).then((values) => {
+                console.log(values);
                 let connections = {}
                 values.forEach((camera_id, i) => {
                     connections[camera_id] = {
-                        sdp: values[i].sdp,
-                        type: values[i].type
+                        sdp: values[i].localDescription.sdp,
+                        type: values[i].localDescription.type
                     }
                 });
                 socket.emit('consume-rtc', {
