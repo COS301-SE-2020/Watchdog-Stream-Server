@@ -194,34 +194,43 @@ class ClientManager(threading.Thread):
             self.send_available_cameras(session_id, client.user_id)
 
     # sends sdp & type to each specified producer
-    def connect_camera(self, session_id, camera_id, rtc_sdp, rtc_type):
-        print('Connecting Camera', session_id, camera_id)
-        if session_id in self.clients and self.clients[session_id] is not None:
-            user_id = self.clients[session_id].user_id
-            if user_id in self.producers:
-                for producer_session_id, producer in self.producers[user_id].items():
-                    if camera_id in producer.available_ids:
-                        print('SENDING Connecting Camera', session_id, camera_id)
-                        # self.socket.emit('connect-rtc', {'connection': {
-                        #     'sdp': rtc_sdp,
-                        #     'type': rtc_type,
-                        #     'camera_id': camera_id,
-                        #     'peer_session_id': session_id
-                        # }}, room=producer_session_id)
-                        # loop = asyncio.new_event_loop()
-                        # asyncio.set_event_loop(loop)
-                        # loop.run_until_complete(producer.offer({
-                        #             'sdp': rtc_sdp,
-                        #             'type': rtc_type,
-                        #             'camera_id': camera_id,
-                        #             'peer_session_id': session_id
-                        #         }))
-                        return producer.offer({
-                            'sdp': rtc_sdp,
-                            'type': rtc_type,
-                            'camera_id': camera_id,
-                            'peer_session_id': session_id
-                        })
+    # def connect_camera(self, session_id, camera_id, rtc_sdp, rtc_type):
+    #     print('Connecting Camera', session_id, camera_id)
+    #     if session_id in self.clients and self.clients[session_id] is not None:
+    #         user_id = self.clients[session_id].user_id
+    #         if user_id in self.producers:
+    #             for producer_session_id, producer in self.producers[user_id].items():
+    #                 if camera_id in producer.available_ids:
+    #                     print('SENDING Connecting Camera', session_id, camera_id)
+    #                     self.socket.emit('connect-rtc', {'connection': {
+    #                         'sdp': rtc_sdp,
+    #                         'type': rtc_type,
+    #                         'camera_id': camera_id,
+    #                         'peer_session_id': session_id
+    #                     }}, room=producer_session_id)
+
+    def connect_camera(self, camera_id, rtc_sdp, rtc_type):
+        print('Connecting Camera', camera_id)
+        for user_id in self.producers.keys():
+            for session_id, producer in self.producers[user_id].items():
+                if camera_id in producer.available_ids:
+                    print('SENDING Connecting Camera', session_id, camera_id)
+                    self.result = {}
+
+                    def callback_func(r):
+                        self.result = r
+
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop = asyncio.get_event_loop()
+                    loop.run_until_complete(producer.offer({
+                        'sdp': rtc_sdp,
+                        'type': rtc_type,
+                        'camera_id': camera_id,
+                        'peer_session_id': session_id
+                    }, callback_func))
+
+                    return self.result
 
     def put_frame(self, session_id, camera_id, frame):
         if session_id in self.clients and self.clients[session_id] is not None:

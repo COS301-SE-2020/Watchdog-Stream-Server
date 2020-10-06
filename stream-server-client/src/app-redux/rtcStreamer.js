@@ -169,6 +169,7 @@ var SocketManager = (function () {
                     }).then((response) => {
                         return response.json();
                     }).then((data) => {
+                        console.log(data)
                         let answer = {
                             type: data.type,
                             sdp: data.sdp
