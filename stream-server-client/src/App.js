@@ -101,7 +101,7 @@ function App(props) {
               <button onClick={() => props.fetch()}>Get ControlPanel (Dynamo)</button>
               <hr />
               <button onClick={() => props.authorize()}>Authenticate (On Stream Server)</button>
-              <button onClick={() => props.tuneIn(props.camera_list, [], props.producers)}>Tune In (Consume-View on Stream Server)</button>
+              <button onClick={() => props.tuneIn(props.cameras, [], props.producers)}>Tune In (Consume-View on Stream Server)</button>
               <button onClick={() => SocketManager.connect()}>Connect (Stream Server)</button>
               <button onClick={() => SocketManager.disconnect()}>Disconnect (Stream Server)</button>
             </Col>
