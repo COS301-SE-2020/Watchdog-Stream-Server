@@ -54,7 +54,7 @@ var SocketManager = (function () {
 
         socket.on('available-views',
             (data) => {
-                socket.emit('consume-view', data)
+                // socket.emit('consume-view', data)
                 dispatch({
                     type: "UPDATE_PRODUCERS",
                     data,
