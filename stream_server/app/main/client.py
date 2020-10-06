@@ -1,7 +1,9 @@
 import time
+from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc.contrib.media import MediaPlayer
 
 
-TIMEOUT = 60
+TIMEOUT = 600
 
 
 class ClientHandler:
@@ -35,6 +37,8 @@ class Producer(ClientHandler):
         self.currently_producing = False
         Producer.producers[self.producer_id] = self
         self.timer = time.time()
+
+        self.pcs = set()
 
     def set_available(self, available_ids):
         self.available_ids = available_ids
@@ -146,6 +150,34 @@ class Producer(ClientHandler):
     def get_type(self):
         return 'producer'
 
+    async def offer(self, request):
+        player = MediaPlayer("rtsp://10.0.0.109:8080/h264_ulaw.sdp")
+        print('OFFER')
+        print(request)
+        camera_id = request['camera_id']
+        peer_session_id = request['peer_session_id']
+        offer = RTCSessionDescription(sdp=request['sdp'], type=request['type'])
+
+        pc = RTCPeerConnection()
+        self.pcs.add(pc)
+
+        @pc.on('iceconnectionstatechange')
+        async def on_iceconnectionstatechange():
+            print('ICE connection state is %s' % pc.iceConnectionState)
+            if pc.iceConnectionState == 'failed':
+                await pc.close()
+                self.pcs.discard(pc)
+
+        await pc.setRemoteDescription(offer)
+        for t in pc.getTransceivers():
+            if t.kind == 'video':
+                pc.addTrack(player.video)
+
+        answer = await pc.createAnswer()
+        await pc.setLocalDescription(answer)
+
+        # self.socket.emit('connected-rtc', {'camera_id': camera_id, 'sdp': pc.localDescription.sdp, 'type': pc.localDescription.type}, room=peer_session_id)
+        return {'camera_id': camera_id, 'sdp': pc.localDescription.sdp, 'type': pc.localDescription.type}
 
 class Consumer(ClientHandler):
     def __init__(self, socket, session_id, user_id):

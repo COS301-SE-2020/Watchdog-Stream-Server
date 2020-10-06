@@ -1,7 +1,7 @@
 import time
 import threading
 from .client import Producer, Consumer, TIMEOUT
-
+import asyncio
 
 class ClientManager(threading.Thread):
     def __init__(self, socket):
@@ -202,12 +202,26 @@ class ClientManager(threading.Thread):
                 for producer_session_id, producer in self.producers[user_id].items():
                     if camera_id in producer.available_ids:
                         print('SENDING Connecting Camera', session_id, camera_id)
-                        self.socket.emit('connect-rtc', {'connection': {
+                        # self.socket.emit('connect-rtc', {'connection': {
+                        #     'sdp': rtc_sdp,
+                        #     'type': rtc_type,
+                        #     'camera_id': camera_id,
+                        #     'peer_session_id': session_id
+                        # }}, room=producer_session_id)
+                        # loop = asyncio.new_event_loop()
+                        # asyncio.set_event_loop(loop)
+                        # loop.run_until_complete(producer.offer({
+                        #             'sdp': rtc_sdp,
+                        #             'type': rtc_type,
+                        #             'camera_id': camera_id,
+                        #             'peer_session_id': session_id
+                        #         }))
+                        return producer.offer({
                             'sdp': rtc_sdp,
                             'type': rtc_type,
                             'camera_id': camera_id,
                             'peer_session_id': session_id
-                        }}, room=producer_session_id)
+                        })
 
     def put_frame(self, session_id, camera_id, frame):
         if session_id in self.clients and self.clients[session_id] is not None:

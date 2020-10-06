@@ -98,7 +98,7 @@ def build(app):
         socket_server.emit('connected-rtc', {'camera_id': data['camera_id'], 'sdp': data['sdp'], 'type': data['type']}, room=data['requested_session'])
 
     client_manager.start()
-    return app
+    return client_manager
 
     # @socket_server.on('message')
     # def handle_message(message):
