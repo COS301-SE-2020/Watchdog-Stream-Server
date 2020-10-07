@@ -32,7 +32,7 @@ async def start():
     await asyncio.sleep(1000)
 
 
-if platform == 'Darwin':
+if platform.system() == 'Darwin':
     asyncio.get_event_loop().run_until_complete(start())
 else:
     loop = asyncio.ProactorEventLoop()
