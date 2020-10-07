@@ -151,7 +151,7 @@ class Producer(ClientHandler):
         return 'producer'
 
     async def offer(self, request, callback):
-        self.player = MediaPlayer("rtsp://10.0.0.109:8080/h264_ulaw.sdp")
+        self.player = MediaPlayer("rtsp://192.168.0.158:8080/h264_ulaw.sdp")
         print('OFFER')
         camera_id = request['camera_id']
         peer_session_id = request['peer_session_id']

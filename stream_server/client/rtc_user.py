@@ -90,7 +90,7 @@ class Producer(User):
         })
 
         # self.player = VideoTransformTrack()
-        self.player = MediaPlayer("rtsp://10.0.0.109:8080/h264_ulaw.sdp")
+        self.player = MediaPlayer("rtsp://192.168.0.158:8080/h264_ulaw.sdp")
 
     # Start HCP Client Producer
     def activate(self, camera_list):

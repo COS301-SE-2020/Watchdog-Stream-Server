@@ -209,7 +209,7 @@ class ClientManager(threading.Thread):
     #                         'peer_session_id': session_id
     #                     }}, room=producer_session_id)
 
-    def connect_camera(self, camera_id, rtc_sdp, rtc_type):
+    def connect_camera(self, camera_id, rtc_sdp, rtc_type, callback):
         print('Connecting Camera', camera_id)
         for user_id in self.producers.keys():
             for session_id, producer in self.producers[user_id].items():
@@ -219,6 +219,7 @@ class ClientManager(threading.Thread):
 
                     def callback_func(r):
                         self.result = r
+                        callback(self.result)
 
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
