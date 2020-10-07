@@ -4,6 +4,7 @@ import time
 import datetime
 import random
 from .rtc_producer import RTCConnectionHandler
+import platform
 
 # producer user_id prod_id cam_id1 cam_id2 cam_id3 cam_id4 ...
 # consumer user_id - prod_id1 cam_id1 cam_id2 - prod_id2 cam_id3 cam_id4 ...
@@ -31,7 +32,12 @@ async def start():
     await asyncio.sleep(1000)
 
 
-asyncio.get_event_loop().run_until_complete(start())
+if platform == 'Darwin':
+    asyncio.get_event_loop().run_until_complete(start())
+else:
+    loop = asyncio.ProactorEventLoop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(start())
 
 # time.sleep(10)
 # client.socket.disconnect()
