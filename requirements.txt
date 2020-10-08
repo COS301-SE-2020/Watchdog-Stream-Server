@@ -1,0 +1,12 @@
+aiohttp==3.6.2
+aiortc==0.9.28
+eventlet==0.28.0
+Flask==1.1.2
+Flask-SocketIO==4.3.1
+numpy==1.19.2
+python-engineio==3.13.2
+python-socketio==4.6.0
+requests==2.24.0
+urllib3==1.25.10
+Werkzeug==1.0.1
+yarl==1.6.0
