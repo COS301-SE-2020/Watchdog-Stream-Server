@@ -1,4 +1,4 @@
-aiohttp==3.6.2
+# aiohttp==3.6.2
 # aiortc==0.9.28
 eventlet==0.28.0
 Flask==1.1.2
