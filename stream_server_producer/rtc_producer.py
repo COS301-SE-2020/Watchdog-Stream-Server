@@ -41,7 +41,8 @@ class RTCConnectionHandler:
             # open media source
             options = {"framerate": "30"}
             if platform.system() == "Darwin":
-                player = MediaPlayer("default:none", format="avfoundation", options=options)
+                # player = MediaPlayer("default:none", format="avfoundation", options=options)
+                player = MediaPlayer("rtsp://192.168.0.196:8080/h264_ulaw.sdp") # , options=options)
             else:
                 player = MediaPlayer("/dev/video0", format="v4l2", options=options)
 

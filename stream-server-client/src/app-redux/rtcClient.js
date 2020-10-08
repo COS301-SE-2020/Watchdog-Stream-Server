@@ -8,6 +8,31 @@ const socket = socketIO(LIVE_SERVER_URL, {
     secure: true,
 })
 
+function tuneIn(pc, camera_list, dispatch, config) {
+    console.log('Tuning in...')
+    camera_list.forEach((camera_id) => {
+        pc[camera_id] = new RTCPeerConnection(config);
+        pc[camera_id]['camera_id'] = camera_id
+        pc[camera_id].addEventListener('track', function(evt) {
+            if (evt.track.kind === 'video')
+                console.log(evt)
+                global[camera_id + "_stream"] = evt.streams[0];
+                document.getElementById(camera_id).srcObject = evt.streams[0];
+                document.getElementById(camera_id).controls = true;
+                document.getElementById(camera_id).style.width = '200';
+            // } else {
+            //     document.getElementById('audio').srcObject = evt.streams[0];
+            // }
+            dispatch({
+                type: 'CONSUME_VIEW',
+                camera_id: evt.currentTarget["camera_id"],
+                frame: 'on'
+            })
+        });
+        negotiate(pc[camera_id], camera_id, socket)
+    })
+}
+
 function negotiate(pc, camera_id, socket) {
     console.log('Preparing Negotiation...')
     pc.addTransceiver('video', {direction: 'recvonly'});
@@ -82,21 +107,24 @@ var SocketManager = (function () {
         socket.on('camera-available', (data) => {
             console.log('camera-available: '+data.camera_id)
             dispatch({
-                type: 'UPDATE_PRODUCERS',
+                type: 'CAMERA_AVAILABLE',
                 user_id,
                 'data': data.camera_id
             })
+            tuneIn(pc, [data['camera_id']], dispatch, config)
         })
 
         socket.on('producer-answer', (data)=> {
             console.log('ANSWER: '+data)
             let camera_id = data['camera_id']
             let answer = data['answer']
-            pc[camera_id].setRemoteDescription(answer).then((res) => {
-                console.log('Setting remote description\t'+camera_id+"\t"+res)
-            }).catch((err) => {
-                console.log('Setting remote description FAILED!!L\t'+err)
-            });
+            if (camera_id in pc) {
+                pc[camera_id].setRemoteDescription(answer).then((res) => {
+                    console.log('Setting remote description\t' + camera_id + "\t" + res)
+                }).catch((err) => {
+                    console.log('Setting remote description FAILED!!L\t' + err)
+                });
+            }
         })
 
 
@@ -123,30 +151,8 @@ var SocketManager = (function () {
                 }
             })
         },
-        tuneInToFeed: function (camera_list, site_id, producers) {
-            console.log('Tuning in...')
-            camera_list.forEach((camera_id) => {
-                pc[camera_id] = new RTCPeerConnection(config);
-                pc[camera_id]['camera_id'] = camera_id
-                pc[camera_id].addEventListener('track', function(evt) {
-                    if (evt.track.kind === 'video')
-                        console.log(evt)
-                        global[camera_id + "_stream"] = evt.streams[0];
-                        document.getElementById(camera_id).srcObject = evt.streams[0];
-                        document.getElementById(camera_id).controls = true;
-                        document.getElementById(camera_id).style.width = '200';
-                    // } else {
-                    //     document.getElementById('audio').srcObject = evt.streams[0];
-                    // }
-                    dispatch({
-                        type: 'CONSUME_VIEW',
-                        camera_id: evt.currentTarget["camera_id"],
-                        frame: 'on'
-                    })
-                });
-                negotiate(pc[camera_id], camera_id, socket)
-            })
-
+        tuneInToFeed: function (camera_list) {
+            tuneIn(pc, camera_list, dispatch, config);
         }
     };
 })();

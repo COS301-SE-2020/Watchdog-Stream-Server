@@ -68,7 +68,8 @@ function App(props) {
         style={{
           border: '3px solid',
           borderColor: (props.serverStatus) && (props.producers[cameraObject.id]) ? 'green' : 'red',
-          margin: 5
+          margin: 5,
+          width: '200px'
         }}
         id={cameraObject.id}
         className={cameraObject.id}
