@@ -16,7 +16,8 @@ time.sleep(random.randint(1, 10))
 
 print('STARTING STREAM SERVER CLIENT TESTING ENVIRONMENT')
 user_id = 'b0db8f1c-745d-4d46-9b4c-c30f2ef05637'
-cams = ['c21fc516d15baca3551c4bace78720175b532dc06c4d7431071049a39af0690f5']
+cams = ['c16e99484593b74706fedba2b2786b36abf28b171848ceb5a2db44666e71ffc7c',
+        'cc465f21cb97b3c1cd14569cdaf7fa50fe02107b05bd5411c32f583944bf5d86a']
 
 print('CONSTRUCTED PRODUCER CLIENT ENVIRONMENT')
 print('\tUSER-ID : ', user_id)
@@ -25,10 +26,12 @@ print('\tCAMERA-LIST : ', cams)
 
 
 async def start():
-    client = RTCConnectionHandler(user_id=user_id, camera_id=cams[0])
-    await client.start()
-    await client.register()
-    await client.make_view_available()
+    clients = {}
+    for camera_id in cams:
+        clients[camera_id] = RTCConnectionHandler(user_id=user_id, camera_id=camera_id)
+        await clients[camera_id].start()
+        await clients[camera_id].register()
+        await clients[camera_id].make_view_available()
     await asyncio.sleep(1000)
 
 

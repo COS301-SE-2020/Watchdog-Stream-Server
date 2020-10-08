@@ -1,23 +1,27 @@
 import asyncio
 import platform
 
-import socketio
+import engineio
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaPlayer
-
+import json
 URL = "http://127.0.0.1:8081"
 
 
 class RTCConnectionHandler:
     def __init__(self, camera_id, user_id):
+        # class cust_json(json):
         self.pc = {}
         self.pcs = set()
-        self.socket = socketio.AsyncClient(ssl_verify=False)
+        self.socket = engineio.AsyncClient(ssl_verify=True, json=json)
         self.user_id = user_id
         self.camera_id = camera_id
 
+
+
     async def start(self):
-        await self.socket.connect(URL)
+        print(self.socket.transport())
+        await self.socket.connect("http://127.0.0.1:8081")
 
         @self.socket.on('offer')
         async def process_offer(params):
@@ -64,6 +68,7 @@ class RTCConnectionHandler:
             print('SENDING ANSWER...')
             await self.socket.emit('answer', {
                 'camera_id': params['camera_id'],
+                'token': params['token'],
                 'answer': {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
             })
 
@@ -88,7 +93,7 @@ class RTCConnectionHandler:
 
     async def make_view_available(self):
         print(f'Making view Available: {self.camera_id}')
-        await self.socket.emit('view-available', {
+        await self.socket.emit('make-available', {
             'camera_id': self.camera_id,
             'camera': {}
         })

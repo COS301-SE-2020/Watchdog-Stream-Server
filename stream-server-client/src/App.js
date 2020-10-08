@@ -3,10 +3,10 @@ import logo from './logo.svg';
 import static_image from './static.gif';
 import { Container, Row, Col } from 'react-grid-system';
 import { connect } from 'react-redux';
-import SocketManager from './app-redux/rtcStreamer';
+import SocketManager from './app-redux/rtcClient';
 import './App.css';
 
-import { tuneIntoFeed, authenticate } from './app-redux/rtcStreamer';
+import { tuneIntoFeed, authenticate } from './app-redux/rtcClient';
 import { getControlPanel, getUserData } from './app-redux/actions';
 import Amplify from 'aws-amplify';
 import { Auth } from 'aws-amplify';
@@ -67,19 +67,24 @@ function App(props) {
       <video
         style={{
           border: '3px solid',
-          borderColor: (props.serverStatus) && (props.producers[cameraObject.site]) && (props.producers[cameraObject.site].find(element => element == cameraObject.id)) ? 'green' : 'red',
+          borderColor: (props.serverStatus) && (props.producers[cameraObject.id]) ? 'green' : 'red',
           margin: 5
         }}
-        ref={(video) => {
-          console.log('Camera '+cameraObject.id+" updating...");
-          console.log(global[cameraObject.id+"_stream"]);
-          if (video) {
-            video.autoplay = true;
-            video.controls = true;
-            video.playsinline = true;
-            video.srcObject = global[cameraObject.id+"_stream"];
-          }
-        }}
+        id={cameraObject.id}
+        className={cameraObject.id}
+        // ref={(video) => {
+        //   if (global[cameraObject.id+"_stream"]) {
+        //     console.log('Camera '+cameraObject.id+" updating...");
+        //     console.log(global[cameraObject.id+"_stream"]);
+        //     console.log(props.camera_frames)
+        //   }
+        //   if (video) {
+        //     video.autoplay = true;
+        //     video.controls = true;
+        //     video.playsinline = true;
+        //     video.srcObject = global[cameraObject.id+"_stream"];
+        //   }
+        // }}
       />
       <p>{props.camera_frames[cameraObject.id]}</p>
     </Col>

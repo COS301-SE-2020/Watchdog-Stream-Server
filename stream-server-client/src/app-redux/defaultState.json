@@ -75,7 +75,7 @@
     "Statistics": {},
     "Live": {
         "status": false,
-        "producers": {},
+        "producers": [],
         "consume": {
             "site_id": null,
             "camera_list": [],

@@ -133,6 +133,8 @@ var SocketManager = (function () {
                         console.log(evt)
                         global[camera_id + "_stream"] = evt.streams[0];
                         document.getElementById(camera_id).srcObject = evt.streams[0];
+                        document.getElementById(camera_id).controls = true;
+                        document.getElementById(camera_id).style.width = '200';
                     // } else {
                     //     document.getElementById('audio').srcObject = evt.streams[0];
                     // }

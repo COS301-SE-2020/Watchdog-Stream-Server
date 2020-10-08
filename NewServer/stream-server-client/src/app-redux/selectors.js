@@ -1,1 +1,0 @@
-export const getRecordings = (store) => {store.videos}

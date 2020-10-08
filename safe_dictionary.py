@@ -21,6 +21,15 @@ class SafeDict:
             else:
                 return None
 
+    def get_and_remove(self, key):
+        with self.lock:
+            if key in self.shared_dict:
+                value = self.shared_dict[key]
+                del self.shared_dict[key]
+                return value
+            else:
+                return None
+
     def remove(self, key):
         with self.lock:
             if key in self.shared_dict:

@@ -1,8 +1,9 @@
 from flask import Flask
-from .main.events import build
+from manager import build
 from flask import request
 from flask import jsonify
 import asyncio
+
 
 def create_app():
     app = Flask(__name__)
