@@ -13,6 +13,15 @@ CLIENT_TYPES = SafeDict('Client Types')
 CONSUMER = "consumer"
 PRODUCER = "producer"
 NEGOTIATIONS = SafeDict()
+USER_CAMERAS_ONLINE = {}
+SID_USER_REGISTRY = SafeDict("Sid's to User Ids")
+SERVER_HEALTH = {'connection_health': 0}
+
+
+def add_connection_health(value: int):
+    with LOCK:
+        SERVER_HEALTH['connection_health'] += value
+        return 100-SERVER_HEALTH['connection_health']
 
 
 def generate_token():
@@ -37,6 +46,12 @@ def add_camera_connection(camera_id, client_type, sid):
         else:
             register = CAMERA_PRODUCERS
             room_name = producer_room
+            # If producer, register this to the user_id
+            user_id = SID_USER_REGISTRY.get(sid)
+            if user_id not in USER_CAMERAS_ONLINE:
+                USER_CAMERAS_ONLINE[user_id] = []
+            USER_CAMERAS_ONLINE[user_id].append(camera_id)
+            print(USER_CAMERAS_ONLINE[user_id])
 
         if camera_id not in register:
             register[camera_id] = {}
@@ -46,28 +61,40 @@ def add_camera_connection(camera_id, client_type, sid):
             join_room(room_name(camera_id), sid)
 
 
-def remove_camera_connection(sid):
+def remove_camera_connection(sid, sio):
     """
     Removes client from all cameras
-    :param sid:
+    :param sio: Socket Connection
+    :param sid: Socket id
     :return:
     """
     with LOCK:
         client_type = CLIENT_TYPES.get(sid)
         register = None
         room_name = None
+        other_room = None
+        user_id = SID_USER_REGISTRY.get(sid)
+
         if client_type == CONSUMER:
             register = CAMERA_CONSUMERS
             room_name = consumer_room
+            other_room = producer_room
         else:
             register = CAMERA_PRODUCERS
             room_name = producer_room
+            other_room = consumer_room
 
         for camera_id in register:
             if sid in register[camera_id]:
                 del register[camera_id][sid]
                 CLIENT_TYPES.remove(sid)
+                sio.emit(f'{client_type}-shutdown-camera', room=other_room(camera_id), data={
+                    'camera_id': camera_id
+                })
                 leave_room(room_name(camera_id), sid)
+                if client_type == PRODUCER and user_id in USER_CAMERAS_ONLINE:
+                    if camera_id in USER_CAMERAS_ONLINE[user_id]:
+                        USER_CAMERAS_ONLINE[user_id].remove(camera_id)
 
 
 def build(app):
@@ -75,59 +102,14 @@ def build(app):
 
     @sio.on('connect')
     def connect():
-        print("connected: \t", flask.request.sid)
+        print(f"connected: \t{flask.request.sid}\n\tSERVER HEALTH: {add_connection_health(1)}")
 
     @sio.on('disconnect')
     def disconnect():
         sid = flask.request.sid
-        remove_camera_connection(sid)
-        print(f'disconnect: \t{sid}')
-
-    # @sio.on('register')
-    # def registry_handler(params):
-    #     """
-    #     Registers users and classifies them as consumers and producers
-    #     :param params: {
-    #         "user_id", "client_type", "data"
-    #     }
-    #     :return: web.Response
-    #     """
-    #     print(params['user_id'])
-    #     sid = flask.request.sid
-    #     user_id = params['user_id']
-    #     client_type = params['client_type']
-    #
-    #     user = SID_ROOMS.get(sid)
-    #
-    #     if user == user_id:
-    #         if CLIENTS.get(client_type).get(user_id):
-    #             sio.emit('registered', {
-    #                 'status': True,
-    #                 'code': 3,
-    #                 'message': f'{client_type}: {user_id} already registered.'
-    #             })
-    #             print(CLIENTS.get(client_type))
-    #         else:
-    #             CLIENTS.get(client_type).add(user_id, params['data'])
-    #             SID_ROOMS.add(sid, user_id)
-    #             join_room(sid, user_id)
-    #             sio.emit('registered', {
-    #                 'status': True,
-    #                 'code': 0,
-    #                 'message': f'{client_type}: {user_id} registered.'
-    #             })
-    #             print(CLIENTS.get(client_type))
-    #     else:
-    #         USERS.add(user_id, sid)
-    #         CLIENTS.get(client_type).add(user_id, params['data'])
-    #         SID_ROOMS.add(sid, user_id)
-    #         join_room(sid, user_id)
-    #         sio.emit('registered', {
-    #             'status': True,
-    #             'code': 1,
-    #             'message': f'{client_type}: {user_id} registered.'
-    #         })
-    #         print(CLIENTS.get(client_type))
+        remove_camera_connection(sid, sio)
+        SID_USER_REGISTRY.remove(sid)
+        print(f'disconnect: \t{sid}\n\tSERVER HEALTH: {add_connection_health(-1)}')
 
     @sio.on('negotiate')
     def request_view(data):
@@ -168,3 +150,44 @@ def build(app):
         sid = NEGOTIATIONS.get_and_remove(token)
         print(f'SENDING ANSWER TO PRODUCER: {data["camera_id"]}')
         sio.emit(sid=sid, event='producer-answer', data={'camera_id': camera_id, 'answer': data['answer']})
+
+    @sio.on('ice-connection-failed')
+    def failed_ice(data):
+        sid = NEGOTIATIONS.get_and_remove(data['token'])
+        sio.emit(event='camera-connection-failed', sid=sid, data={
+            'code': 0,
+            'reason': 'Failed to connect to Panel'
+        })
+
+    @sio.on('stream-connection-failure')
+    def failed_connect_to_camera(data):
+        sid = NEGOTIATIONS.get_and_remove(data['token'])
+        sio.emit(event='camera-connection-failed', sid=sid, data={
+            'code': 1,
+            'reason': 'Panel Failed to connect to IP Camera'
+        })
+
+    @sio.on('register')
+    def register_client(data=None):
+        """
+        Registers the sid to a user_id
+        :param data: { user_id }
+        :return:
+        """
+        SID_USER_REGISTRY.add(flask.request.sid, data['user_id'])
+        print(f'registering: {data["user_id"]}')
+        # Send back confirmation
+        sio.emit(event='registered', sid=flask.request.sid, data={'user_id': data['user_id']})
+
+    @sio.on('fetch-online-cameras')
+    def available_views(data=None):
+        sid = flask.request.sid
+        user_id = SID_USER_REGISTRY.get(sid)
+        if user_id in USER_CAMERAS_ONLINE:
+            print(USER_CAMERAS_ONLINE[user_id])
+            for camera_id in USER_CAMERAS_ONLINE[user_id]:
+                join_room(consumer_room(camera_id), sid)
+            sio.emit(event='cameras-online', sid=sid, data={'cameras': USER_CAMERAS_ONLINE[user_id], "user_id": user_id})
+        else:
+            print('Not found')
+            sio.emit(event='cameras-online', sid=sid, data={'cameras': [], 'user_id': user_id})
