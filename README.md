@@ -4,7 +4,7 @@ This repository contains all the code used in the API
 
 ### Watchdog Repositories
 |[Home Control Panel](https://github.com/COS301-SE-2020/Watchdog)|[API](https://github.com/COS301-SE-2020/Watchdog-API)|[Front End](https://github.com/COS301-SE-2020/Watchdog-FrontEnd)|[Stream Server](hhttps://github.com/COS301-SE-2020/Watchdog-Stream-Server)|
-|---|---|---|---|---|
+|---|---|---|---|
 
 ### Project Description:
 
