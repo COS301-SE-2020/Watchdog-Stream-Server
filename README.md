@@ -1,6 +1,6 @@
 # Watchdog - API
 
-This repository contains all the code used in the API
+This repository contains all the code used in the Stream Server
 
 ### Watchdog Repositories
 |[Home Control Panel](https://github.com/COS301-SE-2020/Watchdog)|[API](https://github.com/COS301-SE-2020/Watchdog-API)|[Front End](https://github.com/COS301-SE-2020/Watchdog-FrontEnd)|[Stream Server](https://github.com/COS301-SE-2020/Watchdog-Stream-Server)|
@@ -11,6 +11,11 @@ This repository contains all the code used in the API
 Home break-ins was rated the [number one crime]( http://www.statssa.gov.za/publications/P0341/P03412018.pdf) in South Africa in 2018/2019 period. There were about [1,3 million incidences of housebreaking affecting 5,8% of households in South Africa. Approximately 48% of affected households reported incidences to the police.](http://www.statssa.gov.za/?p=12614)
 
 Watchdog set out to increase the number of reports to the police by providing the home owner with real-time notifications of tangible evidence of when possible intruders have been identified in their IP camera feed.
+
+### Demo Video:
+
+- [Final Video](https://drive.google.com/file/d/15BOKbUff2tXljDJHYg8ci3lUo8_TI62d/view?usp=sharing)
+- [Historical Videos (Demos 1 - 4)](https://drive.google.com/drive/folders/1TFAV01fuNiOemhhsoZSnsPsCSRcAZkSn?usp=sharing)
 
 ### Documentation
 
